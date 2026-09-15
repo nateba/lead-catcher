@@ -22,12 +22,14 @@ export const AuthScreen: React.FC = () => {
         const { error: signInError } = await signIn(email.trim(), password);
         if (signInError) setError(signInError);
       } else {
-        const { error: signUpError } = await signUp(email.trim(), password);
+        const { error: signUpError, needsEmailConfirmation } = await signUp(email.trim(), password);
         if (signUpError) {
           setError(signUpError);
-        } else {
+        } else if (needsEmailConfirmation) {
           setSignupSuccess(true);
         }
+        // Otherwise a session was created immediately — AuthProvider picks it up
+        // and the app renders past this screen on its own.
       }
     } finally {
       setIsSubmitting(false);
