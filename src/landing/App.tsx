@@ -16,10 +16,13 @@ export default function App() {
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
-  // Checkout isn't wired to a real payment gateway yet, so every "assinar" CTA
-  // sends the visitor to sign up in the app instead of a fake payment flow.
-  const handleOpenCheckout = (_planId: string = 'vitalicio') => {
-    window.location.href = '/app/';
+  const CHECKOUT_URLS: Record<string, string> = {
+    mensal: 'https://checkout.applyfy.com.br/checkout/cmu2vbt1y0jqv01pwpekeuyx2?offer=YKR5ZRD',
+    vitalicio: 'https://checkout.applyfy.com.br/checkout/cmu2wb7u50l9201oh3jbdn2dn?offer=SPN02ZK',
+  };
+
+  const handleOpenCheckout = (planId: string = 'vitalicio') => {
+    window.location.href = CHECKOUT_URLS[planId] || CHECKOUT_URLS.vitalicio;
   };
 
   const handleSelectLead = (lead: LeadItem) => {
