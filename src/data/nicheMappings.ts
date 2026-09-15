@@ -1,0 +1,466 @@
+/**
+ * Comprehensive OSM tag mappings and synonyms for business niches.
+ * Allows searching by natural language synonyms and querying multiple related OSM tags in Overpass QL.
+ */
+
+export interface NicheDefinition {
+  key: string;
+  label: string;
+  iconName: string;
+  description: string;
+  primaryTag: string;
+  overpassTags: string[]; // List of OSM tag pairs (e.g. ['shop=hairdresser', 'shop=barber'])
+  synonyms: string[];
+}
+
+export const NICHE_DEFINITIONS: NicheDefinition[] = [
+  {
+    key: 'barbearia',
+    label: 'Barbearia',
+    iconName: 'Scissors',
+    description: 'Barbearias, cortes masculinos e design de barba',
+    primaryTag: 'shop=hairdresser',
+    overpassTags: ['shop=hairdresser', 'shop=barber', 'craft=hairdresser'],
+    synonyms: ['barbearia', 'barbeiro', 'corte masculino', 'barber', 'barbershop', 'bigode', 'barba'],
+  },
+  {
+    key: 'salao_beleza',
+    label: 'Salão de Beleza & Estética',
+    iconName: 'Sparkles',
+    description: 'Salões de beleza, manicure, depilação e estética',
+    primaryTag: 'shop=beauty',
+    overpassTags: ['shop=beauty', 'shop=hairdresser', 'shop=nail_salon', 'shop=cosmetics', 'amenity=spa'],
+    synonyms: [
+      'salão de beleza',
+      'salao de beleza',
+      'estetica',
+      'estética',
+      'manicure',
+      'pedicure',
+      'cabeleireiro',
+      'cabeleireira',
+      'spa',
+      'sobrancelhas',
+      'depilação',
+    ],
+  },
+  {
+    key: 'ar_condicionado',
+    label: 'Ar-Condicionado & Climatização (HVAC)',
+    iconName: 'Wind',
+    description: 'Instalação, limpeza e manutenção de ar-condicionado',
+    primaryTag: 'shop=air_conditioning',
+    overpassTags: [
+      'shop=air_conditioning',
+      'craft=hvac',
+      'craft=air_conditioning',
+      'craft=electrician',
+      'shop=trade',
+    ],
+    synonyms: [
+      'ar condicionado',
+      'ar-condicionado',
+      'climatizacao',
+      'climatização',
+      'hvac',
+      'refrigeração',
+      'refrigeracao',
+      'split',
+      'instalação de ar',
+    ],
+  },
+  {
+    key: 'oficina_mecanica',
+    label: 'Oficina Mecânica & Auto Center',
+    iconName: 'Wrench',
+    description: 'Mecânica geral, suspensão, freios, injeção e troca de óleo',
+    primaryTag: 'shop=car_repair',
+    overpassTags: ['shop=car_repair', 'craft=mechanic', 'shop=tyres', 'shop=car_parts'],
+    synonyms: [
+      'oficina mecanica',
+      'oficina mecânica',
+      'mecanico',
+      'mecânico',
+      'auto center',
+      'autocenter',
+      'troca de oleo',
+      'suspensao',
+      'borracharia',
+      'pneus',
+      'freios',
+    ],
+  },
+  {
+    key: 'dentista',
+    label: 'Clínica Odontológica (Dentista)',
+    iconName: 'Smile',
+    description: 'Dentistas, ortodontia, clareamento e implantes',
+    primaryTag: 'amenity=dentist',
+    overpassTags: ['amenity=dentist', 'healthcare=dentist'],
+    synonyms: [
+      'dentista',
+      'odontologia',
+      'odonto',
+      'clinica odontologica',
+      'consultorio odontologico',
+      'ortodontia',
+      'implantes',
+      'clareamento dental',
+    ],
+  },
+  {
+    key: 'restaurante',
+    label: 'Restaurante',
+    iconName: 'Utensils',
+    description: 'Restaurantes à la carte, buffet e self-service',
+    primaryTag: 'amenity=restaurant',
+    overpassTags: ['amenity=restaurant', 'amenity=food_court'],
+    synonyms: [
+      'restaurante',
+      'almoço',
+      'jantar',
+      'comida',
+      'gastronomia',
+      'bistrô',
+      'bistro',
+      'buffet',
+      'churrascaria',
+      'marmita',
+    ],
+  },
+  {
+    key: 'pizzaria',
+    label: 'Pizzaria',
+    iconName: 'Pizza',
+    description: 'Pizzarias artesanais, rodízios e delivery de pizza',
+    primaryTag: 'amenity=restaurant;cuisine=pizza',
+    overpassTags: ['amenity=restaurant;cuisine=pizza', 'cuisine=pizza', 'shop=pizza'],
+    synonyms: ['pizzaria', 'pizza', 'rodizio de pizza', 'pizzas', 'forno a lenha', 'calzone'],
+  },
+  {
+    key: 'hamburgueria',
+    label: 'Hamburgueria & Lanchonete',
+    iconName: 'Sandwich',
+    description: 'Hamburguerias artesanais, lanches e petiscos',
+    primaryTag: 'amenity=fast_food',
+    overpassTags: ['amenity=fast_food', 'amenity=fast_food;cuisine=burger', 'amenity=cafe'],
+    synonyms: [
+      'hamburgueria',
+      'hamburguer',
+      'hambúrguer',
+      'lanchonete',
+      'lanches',
+      'burger',
+      'artesanal',
+      'pastelaria',
+      'dogueria',
+    ],
+  },
+  {
+    key: 'pet_shop',
+    label: 'Pet Shop & Banho e Tosa',
+    iconName: 'Dog',
+    description: 'Rações, banho, tosa, medicamentos e acessórios pet',
+    primaryTag: 'shop=pet',
+    overpassTags: ['shop=pet', 'shop=pet_grooming'],
+    synonyms: ['pet shop', 'petshop', 'banho e tosa', 'racao', 'ração', 'tosa', 'acessorios pet', 'canil'],
+  },
+  {
+    key: 'veterinaria',
+    label: 'Clínica Veterinária',
+    iconName: 'HeartPulse',
+    description: 'Consultas, vacinas, cirurgias e emergências veterinárias',
+    primaryTag: 'amenity=veterinary',
+    overpassTags: ['amenity=veterinary', 'healthcare=veterinary'],
+    synonyms: ['veterinaria', 'veterinária', 'vet', 'hospital veterinario', 'clinica vet', 'medico veterinario'],
+  },
+  {
+    key: 'academia',
+    label: 'Academia & Crossfit',
+    iconName: 'Dumbbell',
+    description: 'Musculação, treino funcional, crossfit e lutas',
+    primaryTag: 'leisure=fitness_centre',
+    overpassTags: ['leisure=fitness_centre', 'leisure=sports_centre', 'sport=fitness'],
+    synonyms: [
+      'academia',
+      'fitness',
+      'musculacao',
+      'musculação',
+      'crossfit',
+      'cross fit',
+      'treino funcional',
+      'ginasio',
+      'box',
+      'personal trainer',
+    ],
+  },
+  {
+    key: 'padaria',
+    label: 'Padaria & Confeitaria',
+    iconName: 'Croissant',
+    description: 'Pães artesanais, bolos, salgados, doces e café colonial',
+    primaryTag: 'shop=bakery',
+    overpassTags: ['shop=bakery', 'shop=pastry', 'shop=confectionery'],
+    synonyms: ['padaria', 'panificadora', 'confeitaria', 'pao', 'pão', 'bolos', 'doces', 'salgados'],
+  },
+  {
+    key: 'cafeteria',
+    label: 'Cafeteria & Bistro',
+    iconName: 'Coffee',
+    description: 'Cafés especiais, tortas, doces e lanches rápidos',
+    primaryTag: 'amenity=cafe',
+    overpassTags: ['amenity=cafe'],
+    synonyms: ['cafeteria', 'cafe', 'café', 'coffee', 'espresso', 'doceria', 'casa de cha'],
+  },
+  {
+    key: 'advocacia',
+    label: 'Escritório de Advocacia',
+    iconName: 'Scale',
+    description: 'Advogados trabalhistas, cíveis, tributários e empresariais',
+    primaryTag: 'office=lawyer',
+    overpassTags: ['office=lawyer', 'office=legal'],
+    synonyms: [
+      'advogado',
+      'advocacia',
+      'escritorio de advocacia',
+      'juridico',
+      'jurídico',
+      'direito',
+      'consultoria juridica',
+    ],
+  },
+  {
+    key: 'contabilidade',
+    label: 'Escritório de Contabilidade',
+    iconName: 'Calculator',
+    description: 'Contabilidade, assessoria fiscal, folha de pagamento e MEI',
+    primaryTag: 'office=accountant',
+    overpassTags: ['office=accountant', 'office=tax_advisor'],
+    synonyms: [
+      'contabilidade',
+      'contador',
+      'escritorio contabil',
+      'contabil',
+      'contábil',
+      'fiscal',
+      'abertura de empresa',
+      'mei',
+    ],
+  },
+  {
+    key: 'imobiliaria',
+    label: 'Imobiliária & Corretores',
+    iconName: 'Building',
+    description: 'Venda, aluguel e administração de imóveis residenciais e comerciais',
+    primaryTag: 'office=estate_agent',
+    overpassTags: ['office=estate_agent', 'office=real_estate'],
+    synonyms: ['imobiliaria', 'imobiliária', 'corretor', 'corretora', 'aluguel de imoveis', 'venda de casas'],
+  },
+  {
+    key: 'farmacia',
+    label: 'Farmácia & Drogaria',
+    iconName: 'Pill',
+    description: 'Medicamentos, dermocosméticos e perfumaria',
+    primaryTag: 'amenity=pharmacy',
+    overpassTags: ['amenity=pharmacy', 'healthcare=pharmacy', 'shop=chemist'],
+    synonyms: ['farmacia', 'farmácia', 'drogaria', 'remedios', 'remédios', 'manipulação'],
+  },
+  {
+    key: 'otica',
+    label: 'Ótica',
+    iconName: 'Glasses',
+    description: 'Armações, lentes de grau, óculos de sol e exames de vista',
+    primaryTag: 'shop=optician',
+    overpassTags: ['shop=optician'],
+    synonyms: ['otica', 'ótica', 'oculos', 'óculos', 'lentes', 'oftalmologia'],
+  },
+  {
+    key: 'loja_roupas',
+    label: 'Loja de Roupas & Moda',
+    iconName: 'Shirt',
+    description: 'Moda feminina, masculina, infantil e casual',
+    primaryTag: 'shop=clothes',
+    overpassTags: ['shop=clothes', 'shop=boutique', 'shop=fashion'],
+    synonyms: ['loja de roupas', 'boutique', 'moda', 'vestuario', 'vestuário', 'roupas', 'calcados'],
+  },
+  {
+    key: 'lava_rapido',
+    label: 'Lava Rápido & Estética Automotiva',
+    iconName: 'Car',
+    description: 'Lavagem técnica, polimento, vitrificação e higienização interna',
+    primaryTag: 'amenity=car_wash',
+    overpassTags: ['amenity=car_wash', 'shop=car_wash'],
+    synonyms: [
+      'lava rapido',
+      'lava-rápido',
+      'lava jato',
+      'estetica automotiva',
+      'estética automotiva',
+      'polimento',
+      'detalhamento',
+      'lavagem',
+    ],
+  },
+  {
+    key: 'estudio_tatuagem',
+    label: 'Estúdio de Tatuagem & Piercing',
+    iconName: 'PenTool',
+    description: 'Tattoos exclusivas, cover-up e aplicação de piercings',
+    primaryTag: 'shop=tattoo',
+    overpassTags: ['shop=tattoo'],
+    synonyms: ['tatuagem', 'tattoo', 'piercing', 'estudio de tattoo', 'tatuador'],
+  },
+  {
+    key: 'chaveiro',
+    label: 'Chaveiro 24 Horas',
+    iconName: 'Key',
+    description: 'Cópias de chaves residenciais, automotivas e abertura de portas',
+    primaryTag: 'shop=locksmith',
+    overpassTags: ['shop=locksmith', 'craft=locksmith'],
+    synonyms: ['chaveiro', 'abertura de portas', 'chaves', 'fechadura', 'troca de segredo'],
+  },
+  {
+    key: 'floricultura',
+    label: 'Floricultura & Decoração',
+    iconName: 'Flower2',
+    description: 'Flores naturais, arranjos, buquês e presentes',
+    primaryTag: 'shop=florist',
+    overpassTags: ['shop=florist'],
+    synonyms: ['floricultura', 'flores', 'buque', 'buquê', 'plantas', 'arranjos florais'],
+  },
+  {
+    key: 'sorveteria',
+    label: 'Sorveteria & Açaí',
+    iconName: 'IceCream',
+    description: 'Sorvetes artesanais, picolés, milk shakes e açaí',
+    primaryTag: 'amenity=ice_cream',
+    overpassTags: ['amenity=ice_cream', 'shop=ice_cream'],
+    synonyms: ['sorveteria', 'sorvete', 'acai', 'açaí', 'gelato', 'paletas', 'picolé'],
+  },
+  {
+    key: 'acougue',
+    label: 'Açougue & Casa de Carnes',
+    iconName: 'Beef',
+    description: 'Cortes nobres, carnes para churrasco e embutidos',
+    primaryTag: 'shop=butcher',
+    overpassTags: ['shop=butcher'],
+    synonyms: ['acougue', 'açougue', 'casa de carnes', 'boutique de carnes', 'churrasco', 'carnes'],
+  },
+  {
+    key: 'clinica_medica',
+    label: 'Clínica Médica & Consultório',
+    iconName: 'Stethoscope',
+    description: 'Consultas médicas particulares, especialidades e exames',
+    primaryTag: 'amenity=clinic',
+    overpassTags: ['amenity=clinic', 'healthcare=clinic', 'healthcare=doctor'],
+    synonyms: [
+      'clinica medica',
+      'clínica médica',
+      'consultorio medico',
+      'medico',
+      'médico',
+      'pediatra',
+      'dermatologista',
+      'cardiologista',
+      'exames',
+    ],
+  },
+  {
+    key: 'distribuidora_bebidas',
+    label: 'Distribuidora de Bebidas',
+    iconName: 'Beer',
+    description: 'Cervejas, refrigerantes, destilados, gelo e carvão',
+    primaryTag: 'shop=beverages',
+    overpassTags: ['shop=beverages', 'shop=alcohol'],
+    synonyms: ['distribuidora de bebidas', 'deposito de bebidas', 'bebidas', 'cerveja', 'gelo', 'chopp'],
+  },
+  {
+    key: 'assistencia_celular',
+    label: 'Assistência Técnica Celulares & PCs',
+    iconName: 'Smartphone',
+    description: 'Troca de tela, bateria, reparos de placa e computadores',
+    primaryTag: 'shop=electronics_repair',
+    overpassTags: ['shop=electronics_repair', 'shop=mobile_phone', 'craft=electronics_repair'],
+    synonyms: [
+      'assistencia tecnica',
+      'assistência técnica',
+      'conserto de celular',
+      'troca de tela',
+      'reparo de notebook',
+      'smartphone',
+      'manutencao de celular',
+    ],
+  },
+  {
+    key: 'pilates_yoga',
+    label: 'Estúdio de Pilates & Yoga',
+    iconName: 'Activity',
+    description: 'Pilates clássico, aparelhos, reabilitação e sessões de yoga',
+    primaryTag: 'amenity=studio',
+    overpassTags: ['amenity=studio', 'leisure=sports_centre;sport=yoga', 'leisure=fitness_centre;sport=pilates'],
+    synonyms: ['pilates', 'yoga', 'ioga', 'estudio de pilates', 'reabilitacao'],
+  },
+  {
+    key: 'material_construcao',
+    label: 'Materiais de Construção & Tintas',
+    iconName: 'Hammer',
+    description: 'Materiais para obra, elétrica, hidráulica, ferramentas e tintas',
+    primaryTag: 'shop=doityourself',
+    overpassTags: ['shop=doityourself', 'shop=hardware', 'shop=paint'],
+    synonyms: ['material de construcao', 'materiais de construcao', 'deposito de construcao', 'tintas', 'ferragens'],
+  },
+  {
+    key: 'vidracaria',
+    label: 'Vidraçaria & Esquadrias',
+    iconName: 'Maximize2',
+    description: 'Box para banheiro, espelhos, portas e janelas de vidro temperado',
+    primaryTag: 'shop=glaziery',
+    overpassTags: ['shop=glaziery', 'craft=glazier'],
+    synonyms: ['vidracaria', 'vidraçaria', 'vidros', 'espelhos', 'box de vidro', 'esquadrias'],
+  },
+  {
+    key: 'personalizado',
+    label: 'Personalizado (Tag Livre OSM)',
+    iconName: 'SlidersHorizontal',
+    description: 'Digite qualquer tag válida do OpenStreetMap (ex: shop=bicycle)',
+    primaryTag: 'custom',
+    overpassTags: [],
+    synonyms: ['personalizado', 'livre', 'custom'],
+  },
+];
+
+/**
+ * Finds a matching niche based on user search text (supporting synonyms and accents).
+ */
+export function findNicheByTerm(term: string): NicheDefinition | null {
+  if (!term || !term.trim()) return null;
+  const cleanTerm = term
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+  // 1. Direct match with key or label
+  const direct = NICHE_DEFINITIONS.find(
+    (n) =>
+      n.key === term.toLowerCase() ||
+      n.label
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') === cleanTerm
+  );
+  if (direct) return direct;
+
+  // 2. Match with synonyms
+  const matched = NICHE_DEFINITIONS.find((n) =>
+    n.synonyms.some((syn) => {
+      const cleanSyn = syn
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      return cleanSyn === cleanTerm || cleanTerm.includes(cleanSyn) || cleanSyn.includes(cleanTerm);
+    })
+  );
+
+  return matched || null;
+}

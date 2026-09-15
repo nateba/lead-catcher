@@ -1,0 +1,630 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Search,
+  MapPin,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+  Layers,
+  Phone,
+  Building2,
+  XCircle,
+  Clock,
+  Globe,
+  RotateCcw,
+  X,
+  Target,
+} from 'lucide-react';
+import { SearchFilters, RecentSearch } from '../types';
+import { BRAZIL_STATES, BUSINESS_CATEGORIES } from '../data/categories';
+import { NICHE_DEFINITIONS, findNicheByTerm } from '../data/nicheMappings';
+import { geocodeCity } from '../services/osmService';
+import { getRecentSearches, saveRecentSearch } from '../services/storageService';
+
+interface SearchFormProps {
+  onSearch: (filters: SearchFilters) => void;
+  onCancelSearch?: () => void;
+  isLoading: boolean;
+  loadingStep: number;
+  loadingMessage: string;
+}
+
+export const SearchForm: React.FC<SearchFormProps> = ({
+  onSearch,
+  onCancelSearch,
+  isLoading,
+  loadingStep,
+  loadingMessage,
+}) => {
+  const [state, setState] = useState('SP');
+  const [city, setCity] = useState('São Paulo');
+  const [categoryKey, setCategoryKey] = useState('barbearia');
+  const [customTag, setCustomTag] = useState('');
+  const [radiusKm, setRadiusKm] = useState(5);
+  const [limit, setLimit] = useState(50);
+
+  // Advanced filters
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [onlyWithPhone, setOnlyWithPhone] = useState(false);
+  const [onlyWithFullAddress, setOnlyWithFullAddress] = useState(false);
+  const [excludeClosed, setExcludeClosed] = useState(true);
+  const [minScore, setMinScore] = useState<number>(0);
+  const [websiteFilter, setWebsiteFilter] = useState<'all' | 'no_website_only' | 'has_website_only'>('no_website_only');
+
+  // Recent Searches
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+
+  // City validation
+  const [isValidatingCity, setIsValidatingCity] = useState(false);
+  const [cityValid, setCityValid] = useState<boolean | null>(null);
+  const [cityValidationMessage, setCityValidationMessage] = useState('');
+
+  // Category combobox search & synonyms
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
+  const comboboxRef = useRef<HTMLDivElement>(null);
+
+  // Load recent searches on mount
+  useEffect(() => {
+    getRecentSearches().then(setRecentSearches);
+  }, []);
+
+  const selectedCategory =
+    NICHE_DEFINITIONS.find((c) => c.key === categoryKey) ||
+    BUSINESS_CATEGORIES.find((c) => c.key === categoryKey);
+
+  // Close combobox when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (comboboxRef.current && !comboboxRef.current.contains(e.target as Node)) {
+        setIsCategoryOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Validate city on blur
+  const validateCityName = async () => {
+    if (!city.trim() || !state) return;
+    setIsValidatingCity(true);
+    setCityValidationMessage('');
+    try {
+      const geo = await geocodeCity(city, state);
+      if (geo) {
+        setCityValid(true);
+        setCityValidationMessage(`✓ ${geo.formattedLocation}`);
+      } else {
+        setCityValid(false);
+        setCityValidationMessage(`Não localizamos "${city}" no estado ${state}. Verifique a grafia.`);
+      }
+    } catch {
+      setCityValid(null);
+    } finally {
+      setIsValidatingCity(false);
+    }
+  };
+
+  // Filter categories with synonym search
+  const filteredCategories = NICHE_DEFINITIONS.filter((c) => {
+    const q = categorySearch.toLowerCase().trim();
+    if (!q) return true;
+    if (c.label.toLowerCase().includes(q)) return true;
+    if (c.description.toLowerCase().includes(q)) return true;
+    if (c.primaryTag.toLowerCase().includes(q)) return true;
+    if (c.synonyms && c.synonyms.some((syn) => syn.toLowerCase().includes(q))) return true;
+    return false;
+  });
+
+  const isFormValid = Boolean(
+    state && city.trim() && (categoryKey !== 'personalizado' || customTag.trim())
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isFormValid || isLoading) return;
+
+    const label = selectedCategory?.label || 'Negócio Local';
+
+    // Save recent search
+    const updatedRecents = await saveRecentSearch({
+      city: city.trim(),
+      state,
+      categoryKey,
+      categoryLabel: label,
+      radiusKm,
+      limit,
+    });
+    setRecentSearches(updatedRecents);
+
+    onSearch({
+      state,
+      city: city.trim(),
+      categoryKey,
+      customCategoryTag: customTag.trim(),
+      radiusKm,
+      limit,
+      onlyWithPhone,
+      onlyWithFullAddress,
+      excludeClosed,
+      minScore,
+      websiteFilter,
+    });
+  };
+
+  const handleApplyRecent = (recent: RecentSearch) => {
+    setState(recent.state);
+    setCity(recent.city);
+    setCategoryKey(recent.categoryKey);
+    setRadiusKm(recent.radiusKm || 5);
+    setCityValid(null);
+    setCityValidationMessage('');
+  };
+
+  return (
+    <div id="search-card-container" className="w-full max-w-3xl mx-auto">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none p-6 sm:p-8 transition-all">
+        {/* Card Header */}
+        <div className="mb-6 pb-5 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">
+            <Target className="w-4 h-4" />
+            <span>Radar de Prospecção & Qualificação de Leads</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Encontrar Empresas Locais
+          </h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Pesquise no OpenStreetMap, identifique oportunidades de alta conversão e aborde com landing pages prontas.
+          </p>
+
+          {/* Quick Recent Searches Chips */}
+          {recentSearches.length > 0 && !isLoading && (
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 flex-wrap text-xs">
+              <span className="text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 text-[11px]">
+                <Clock className="w-3 h-3" />
+                Recentes:
+              </span>
+              {recentSearches.map((rec) => (
+                <button
+                  key={rec.id}
+                  type="button"
+                  onClick={() => handleApplyRecent(rec)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 font-medium transition-colors border border-slate-200/60 dark:border-slate-700"
+                >
+                  {rec.city}/{rec.state} • {rec.categoryLabel}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Row 1: State & City */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            {/* State */}
+            <div className="sm:col-span-4">
+              <label htmlFor="state-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Estado <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  id="state-select"
+                  value={state}
+                  onChange={(e) => {
+                    setState(e.target.value);
+                    setCityValid(null);
+                  }}
+                  disabled={isLoading}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer"
+                >
+                  {BRAZIL_STATES.map((s) => (
+                    <option key={s.uf} value={s.uf}>
+                      {s.uf} - {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* City */}
+            <div className="sm:col-span-8">
+              <label htmlFor="city-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                <span>Cidade <span className="text-rose-500">*</span></span>
+                {isValidatingCity && (
+                  <span className="text-[11px] text-slate-400 font-normal flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                    Validando via Nominatim...
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <input
+                  id="city-input"
+                  type="text"
+                  value={city}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    setCityValid(null);
+                  }}
+                  onBlur={validateCityName}
+                  placeholder="Ex: Curitiba, São Paulo, Florianópolis, Belo Horizonte..."
+                  disabled={isLoading}
+                  className={`w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800/60 border rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
+                    cityValid === true
+                      ? 'border-emerald-500/50 dark:border-emerald-500/50'
+                      : cityValid === false
+                      ? 'border-rose-500/50 dark:border-rose-500/50'
+                      : 'border-slate-200 dark:border-slate-700'
+                  }`}
+                />
+                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                  {cityValid === true && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                  {cityValid === false && <AlertCircle className="w-4 h-4 text-rose-500" />}
+                </div>
+              </div>
+              {cityValidationMessage && (
+                <p className={`text-[11px] mt-1 ${cityValid ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-rose-500'}`}>
+                  {cityValidationMessage}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Business Category Combobox */}
+          <div className="relative" ref={comboboxRef}>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Nicho / Categoria de Negócio <span className="text-rose-500">*</span>
+            </label>
+            <button
+              id="category-combobox-button"
+              type="button"
+              onClick={() => !isLoading && setIsCategoryOpen(!isCategoryOpen)}
+              disabled={isLoading}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-left"
+            >
+              <div className="flex items-center gap-2.5 truncate">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="font-semibold">{selectedCategory?.label || 'Selecione um nicho'}</span>
+                {selectedCategory && 'primaryTag' in selectedCategory && selectedCategory.key !== 'personalizado' && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-200/70 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400 font-mono hidden sm:inline-block">
+                    {selectedCategory.primaryTag}
+                  </span>
+                )}
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
+            </button>
+
+            {/* Dropdown with inner search & synonym support */}
+            {isCategoryOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 p-2 overflow-hidden animate-fadeIn">
+                <div className="p-1 mb-1">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      placeholder="Pesquisar por nicho ou sinônimo (ex: hvac, borracharia, clareamento, pilates)..."
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
+                  {filteredCategories.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">
+                      Nenhuma categoria encontrada para "{categorySearch}". Selecione "Personalizado" abaixo para usar sua própria tag OSM.
+                    </div>
+                  ) : (
+                    filteredCategories.map((cat) => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => {
+                          setCategoryKey(cat.key);
+                          setIsCategoryOpen(false);
+                          setCategorySearch('');
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors text-left ${
+                          categoryKey === cat.key
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-[13px]">{cat.label}</span>
+                          {cat.description && (
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500">{cat.description}</span>
+                          )}
+                        </div>
+                        {cat.primaryTag !== 'custom' && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-slate-500 shrink-0 ml-2 hidden sm:inline-block">
+                            {cat.primaryTag}
+                          </span>
+                        )}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Custom OSM Tag field if 'personalizado' */}
+          {categoryKey === 'personalizado' && (
+            <div className="p-3.5 bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl space-y-1.5 animate-fadeIn">
+              <label htmlFor="custom-tag-input" className="block text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                Tag Personalizada do OpenStreetMap (chave=valor)
+              </label>
+              <input
+                id="custom-tag-input"
+                type="text"
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                placeholder="Ex: shop=bicycle, leisure=bowling_alley, amenity=post_office"
+                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-[11px] text-indigo-600 dark:text-indigo-400">
+                Consulte as tags oficiais em <a href="https://wiki.openstreetmap.org/wiki/Map_features" target="_blank" rel="noreferrer" className="underline font-semibold">wiki.openstreetmap.org</a>
+              </p>
+            </div>
+          )}
+
+          {/* Row 3: Radius & Result Limit */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 pt-1">
+            {/* Radius Options */}
+            <div className="sm:col-span-7">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Raio de Busca
+                </label>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                  {radiusKm} km
+                </span>
+              </div>
+              <div className="grid grid-cols-5 gap-1.5">
+                {[2, 5, 10, 20, 30].map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRadiusKm(r)}
+                    disabled={isLoading}
+                    className={`py-2 text-xs font-bold rounded-lg border transition-all ${
+                      radiusKm === r
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {r} km
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Limit Quantity */}
+            <div className="sm:col-span-5">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                Limite de Resultados
+              </label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[25, 50, 100, 200].map((qty) => (
+                  <button
+                    key={qty}
+                    type="button"
+                    onClick={() => setLimit(qty)}
+                    disabled={isLoading}
+                    className={`py-2 text-xs font-bold rounded-lg border transition-all ${
+                      limit === qty
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {qty}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Collapsible Advanced Filters */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filtros Avançados & Qualificação</span>
+              {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3 animate-fadeIn">
+                {/* Website filter mode */}
+                <div className="space-y-1">
+                  <span className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    Status do Website:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setWebsiteFilter('no_website_only')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        websiteFilter === 'no_website_only'
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      Site não identificado (Recomendado)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWebsiteFilter('all')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        websiteFilter === 'all'
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      Todos os negócios
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWebsiteFilter('has_website_only')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        websiteFilter === 'has_website_only'
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      Já possui site
+                    </button>
+                  </div>
+                </div>
+
+                {/* Score filter */}
+                <div className="space-y-1">
+                  <span className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    Lead Score Mínimo:
+                  </span>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { val: 0, label: 'Qualquer score' },
+                      { val: 40, label: '40+ (Média)' },
+                      { val: 60, label: '60+ (Boa)' },
+                      { val: 80, label: '80+ (Excelente)' },
+                    ].map((s) => (
+                      <button
+                        key={s.val}
+                        type="button"
+                        onClick={() => setMinScore(s.val)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                          minScore === s.val
+                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Checkboxes */}
+                <div className="pt-1 space-y-2">
+                  <label className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={onlyWithPhone}
+                      onChange={(e) => setOnlyWithPhone(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
+                    />
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Somente empresas com telefone ou WhatsApp</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={onlyWithFullAddress}
+                      onChange={(e) => setOnlyWithFullAddress(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
+                    />
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Somente empresas com endereço completo (rua + número)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={excludeClosed}
+                      onChange={(e) => setExcludeClosed(e.target.checked)}
+                      className="w-4 h-4 rounded text-indigo-600 accent-indigo-600 cursor-pointer"
+                    />
+                    <XCircle className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Excluir empresas marcadas como desativadas / fechadas</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button & Cancel Action */}
+          <div className="pt-4 flex items-center gap-3">
+            <button
+              id="search-leads-button"
+              type="submit"
+              disabled={!isFormValid || isLoading}
+              className={`flex-1 flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-white transition-all shadow-lg ${
+                !isFormValid
+                  ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-60'
+                  : isLoading
+                  ? 'bg-indigo-700 cursor-wait'
+                  : 'bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 animate-soft-pulse'
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Buscando no OpenStreetMap...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="w-5 h-5" />
+                  <span>Buscar Oportunidades</span>
+                </>
+              )}
+            </button>
+
+            {isLoading && onCancelSearch && (
+              <button
+                type="button"
+                onClick={onCancelSearch}
+                className="px-4 py-3.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-sm font-bold hover:bg-rose-100 transition-colors flex items-center gap-1.5"
+              >
+                <X className="w-4 h-4" />
+                <span>Cancelar</span>
+              </button>
+            )}
+          </div>
+
+          {/* Step-by-Step Loading Progress Bar */}
+          {isLoading && (
+            <div id="search-progress-bar" className="p-4 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-xl border border-indigo-100 dark:border-indigo-900/60 animate-fadeIn">
+              <div className="flex items-center justify-between text-xs font-semibold text-indigo-900 dark:text-indigo-200 mb-2">
+                <span className="flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-indigo-600 animate-pulse" />
+                  {loadingMessage || 'Processando busca...'}
+                </span>
+                <span>Etapa {loadingStep} de 4</span>
+              </div>
+
+              {/* Multi-step bar */}
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden flex">
+                <div
+                  className="bg-indigo-600 h-full transition-all duration-500 rounded-full"
+                  style={{ width: `${Math.max(10, (loadingStep / 4) * 100)}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-4 gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">
+                <span className={loadingStep >= 1 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>1. Localizar</span>
+                <span className={loadingStep >= 2 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>2. Overpass</span>
+                <span className={loadingStep >= 3 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>3. Normalizar</span>
+                <span className={loadingStep >= 4 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>4. Qualificar</span>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+};

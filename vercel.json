@@ -1,0 +1,9 @@
+{
+  "framework": "vite",
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/generate-site.ts": { "maxDuration": 60 },
+    "api/regenerate-testimonials.ts": { "maxDuration": 60 }
+  }
+}

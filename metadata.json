@@ -1,0 +1,6 @@
+{
+  "name": "LeadSite AI",
+  "description": "Ferramenta de prospecção comercial gratuita que busca empresas no OpenStreetMap sem site e gera landing pages profissionais automáticas com Gemini AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

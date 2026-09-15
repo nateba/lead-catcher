@@ -1,0 +1,14 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.collaborator/
+.vercel
+.claude/
+.playwright-mcp/
+leadsite-ai.zip
+supabase/.temp/
