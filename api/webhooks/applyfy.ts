@@ -1,5 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin } from '../_lib/supabaseAdmin';
+import { createClient } from '@supabase/supabase-js';
+
+// Inlined rather than imported from ../_lib/supabaseAdmin: Vercel's function
+// bundler failed to resolve a relative import that crosses up out of this
+// nested api/webhooks/ directory (ERR_MODULE_NOT_FOUND at runtime), so this
+// helper is kept self-contained here.
+function getSupabaseAdmin() {
+  const url = process.env.VITE_SUPABASE_URL as string;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+  if (!url || !serviceKey) {
+    throw new Error('VITE_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY não configuradas no servidor.');
+  }
+  return createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 // Maps the two known Applyfy offer codes to our internal plan ids.
 const OFFER_TO_PLAN: Record<string, 'mensal' | 'vitalicio'> = {
