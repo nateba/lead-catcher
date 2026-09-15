@@ -1,18 +1,774 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LeadSite AI — Prospecção B2B & Gerador de Landing Pages</title>
-    <meta name="description" content="Ferramenta de prospecção comercial gratuita que busca empresas sem site no OpenStreetMap e cria landing pages persuasivas com Gemini AI." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  </head>
-  <body class="bg-slate-50 text-slate-900 antialiased dark:bg-[#0b0f19] dark:text-slate-100 min-h-screen">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HypeLeads — Prospecção Local com IA</title>
+<meta name="description" content="Encontre negócios locais sem site com HypeLeads, gere landing pages com IA e feche negócio direto pelo WhatsApp. Radar de prospecção via OpenStreetMap." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6FA;
+    --paper-raised:#FFFFFF;
+    --ink:#14161C;
+    --ink-soft:#565B68;
+    --ink-faint:#828896;
+    --line:#E1E3EC;
+    --line-soft:#ECEEF4;
+    --accent:#FF5A36;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#FFE7DF;
+    --accent-2:#0E7C86;
+    --accent-2-soft:#DCF2F1;
+    --good:#1C8A5A;
+    --shadow: 0 1px 2px rgba(20,22,28,.04), 0 12px 32px -16px rgba(20,22,28,.18);
+    --radius-s:10px;
+    --radius-m:16px;
+    --radius-l:24px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#101117;
+      --paper-raised:#171923;
+      --ink:#F0F1F6;
+      --ink-soft:#A7ACBC;
+      --ink-faint:#6B7080;
+      --line:#282B38;
+      --line-soft:#1F212C;
+      --accent:#FF7A57;
+      --accent-ink:#1A0B06;
+      --accent-soft:#3A2018;
+      --accent-2:#3FCFC9;
+      --accent-2-soft:#12302F;
+      --good:#39C285;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 20px 48px -20px rgba(0,0,0,.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#101117;
+    --paper-raised:#171923;
+    --ink:#F0F1F6;
+    --ink-soft:#A7ACBC;
+    --ink-faint:#6B7080;
+    --line:#282B38;
+    --line-soft:#1F212C;
+    --accent:#FF7A57;
+    --accent-ink:#1A0B06;
+    --accent-soft:#3A2018;
+    --accent-2:#3FCFC9;
+    --accent-2-soft:#12302F;
+    --good:#39C285;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 20px 48px -20px rgba(0,0,0,.6);
+    color-scheme: dark;
+  }
 
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Manrope',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%;display:block;}
+  ::selection{background:var(--accent-soft);color:var(--ink);}
+
+  a{color:inherit;}
+  h1,h2,h3{
+    font-family:'Fraunces',Georgia,serif;
+    line-height:1.08;
+    text-wrap:balance;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',ui-monospace,monospace;
+    font-size:.72rem;
+    font-weight:500;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent-2);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
+  section{padding:96px 0;}
+  @media (max-width:720px){ section{padding:64px 0;} .wrap{padding:0 20px;} }
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:40;
+    background:color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:72px;
+  }
+  .brand{
+    display:flex;align-items:center;gap:9px;
+    font-family:'Fraunces',serif;font-weight:600;font-size:1.28rem;
+    text-decoration:none;color:var(--ink);
+  }
+  .brand-mark{
+    width:30px;height:30px;border-radius:9px;
+    background:var(--accent);
+    position:relative;flex:none;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 12%, transparent);
+  }
+  .brand-mark::before,.brand-mark::after{
+    content:"";position:absolute;border-radius:50%;
+    border:1.6px solid var(--accent-ink);opacity:.85;
+  }
+  .brand-mark::before{width:8px;height:8px;top:11px;left:11px;}
+  .brand-mark::after{width:16px;height:16px;top:7px;left:7px;opacity:.45;}
+  .nav-links{display:flex;align-items:center;gap:32px;}
+  .nav-links a{
+    font-size:.87rem;font-weight:600;text-decoration:none;color:var(--ink-soft);
+    transition:color .15s ease;
+  }
+  .nav-links a:hover{color:var(--ink);}
+  .nav-cta{display:flex;align-items:center;gap:10px;}
+  .navlist{display:flex;}
+  @media (max-width:860px){ .navlist{display:none;} }
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;
+    padding:12px 20px;border-radius:999px;
+    text-decoration:none;cursor:pointer;border:1px solid transparent;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);}
+  .btn-primary:hover{transform:translateY(-1px);}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+  .btn-block{width:100%;}
+  .btn-lg{padding:15px 26px;font-size:.95rem;}
+
+  /* ---------- hero ---------- */
+  .hero{padding-top:76px;padding-bottom:64px;}
+  .hero-grid{
+    display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;
+  }
+  @media (max-width:960px){ .hero-grid{grid-template-columns:1fr;} }
+  .hero h1{font-size:clamp(2.3rem,4.6vw,3.55rem);font-weight:600;margin:18px 0 20px;}
+  .hero h1 em{
+    font-style:italic;color:var(--accent);
+  }
+  .hero p.lede{
+    font-size:1.1rem;line-height:1.6;color:var(--ink-soft);
+    max-width:46ch;margin:0 0 30px;
+  }
+  .hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px;}
+  .hero-fine{
+    display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;color:var(--ink-faint);
+  }
+  .hero-fine span{display:flex;align-items:center;gap:6px;}
+  .dot-good{width:6px;height:6px;border-radius:50%;background:var(--good);flex:none;}
+
+  /* radar panel */
+  .radar-panel{
+    position:relative;background:var(--paper-raised);
+    border:1px solid var(--line);border-radius:var(--radius-l);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .radar-scan{
+    position:relative;height:220px;
+    background:
+      radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 62%),
+      var(--paper);
+    border-bottom:1px solid var(--line-soft);
+    overflow:hidden;
+  }
+  .radar-rings{
+    position:absolute;left:50%;bottom:-90px;width:360px;height:360px;
+    transform:translateX(-50%);
+  }
+  .radar-rings i{
+    position:absolute;left:50%;bottom:0;
+    border:1px solid color-mix(in srgb, var(--accent-2) 35%, transparent);
+    border-radius:50%;transform:translateX(-50%);
+  }
+  .radar-rings i:nth-child(1){width:90px;height:90px;}
+  .radar-rings i:nth-child(2){width:180px;height:180px;}
+  .radar-rings i:nth-child(3){width:270px;height:270px;}
+  .radar-rings i:nth-child(4){width:360px;height:360px;border-color:color-mix(in srgb, var(--accent-2) 18%, transparent);}
+  .radar-sweep{
+    position:absolute;left:50%;bottom:0;width:180px;height:180px;
+    transform-origin:0% 100%;
+    background:conic-gradient(from -90deg at 0% 100%, color-mix(in srgb, var(--accent-2) 55%, transparent), transparent 32%);
+    animation:sweep 4.2s linear infinite;
+    opacity:.8;
+  }
+  @keyframes sweep{ to{ transform:rotate(360deg); } }
+  .radar-blip{
+    position:absolute;width:8px;height:8px;border-radius:50%;
+    background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .radar-label{
+    position:absolute;top:14px;left:16px;display:flex;align-items:center;gap:8px;
+    font-size:.72rem;color:var(--ink-faint);
+  }
+  .radar-label b{color:var(--ink);font-weight:700;}
+  .lead-feed{padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .lead-row{
+    display:flex;align-items:center;gap:11px;
+    padding:10px 12px;border-radius:12px;background:var(--paper);
+    border:1px solid var(--line-soft);
+  }
+  .lead-ava{
+    width:34px;height:34px;border-radius:9px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.72rem;color:#fff;
+  }
+  .lead-meta{min-width:0;flex:1;}
+  .lead-meta .name{font-size:.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lead-meta .sub{font-size:.72rem;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lead-score{
+    flex:none;font-family:'IBM Plex Mono',monospace;font-size:.72rem;font-weight:600;
+    padding:4px 8px;border-radius:7px;background:var(--accent-2-soft);color:var(--accent-2);
+  }
+  .lead-tag{
+    flex:none;font-size:.66rem;font-weight:700;padding:3px 7px;border-radius:6px;
+    background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.03em;
+  }
+  .radar-example-note{
+    padding:10px 16px 16px;font-size:.7rem;color:var(--ink-faint);
+    border-top:1px solid var(--line-soft);
+  }
+
+  /* ---------- proof strip ---------- */
+  .proof{border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);padding:34px 0;}
+  .proof .wrap{
+    display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;
+  }
+  .proof-lede{font-size:.85rem;color:var(--ink-faint);max-width:24ch;}
+  .proof-marks{display:flex;gap:32px;flex-wrap:wrap;align-items:center;}
+  .proof-mark{
+    display:flex;align-items:center;gap:9px;font-weight:700;font-size:.92rem;color:var(--ink-soft);
+  }
+  .proof-mark svg{flex:none;color:var(--accent-2);}
+
+  /* ---------- section heads ---------- */
+  .head{max-width:640px;margin-bottom:52px;}
+  .head h2{font-size:clamp(1.7rem,3vw,2.35rem);font-weight:600;margin-top:14px;}
+  .head p{font-size:1rem;color:var(--ink-soft);margin-top:14px;line-height:1.6;}
+
+  /* ---------- features ---------- */
+  .feat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:var(--radius-l);
+    overflow:hidden;
+  }
+  @media (max-width:960px){ .feat-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:600px){ .feat-grid{grid-template-columns:1fr;} }
+  .feat{
+    background:var(--paper-raised);padding:28px 24px;
+    display:flex;flex-direction:column;gap:12px;min-height:190px;
+  }
+  .feat-icon{
+    width:38px;height:38px;border-radius:11px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent-2-soft);color:var(--accent-2);
+  }
+  .feat h3{font-family:'Manrope',sans-serif;font-weight:800;font-size:.98rem;}
+  .feat p{font-size:.84rem;color:var(--ink-soft);line-height:1.55;margin:0;}
+  .feat .tag{
+    margin-top:auto;align-self:flex-start;
+    font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.05em;
+    color:var(--accent);text-transform:uppercase;
+  }
+
+  /* ---------- how it works ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
+  @media (max-width:860px){ .steps{grid-template-columns:1fr;} }
+  .step{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius-l);
+    padding:30px 26px;position:relative;
+  }
+  .step-num{
+    font-family:'Fraunces',serif;font-style:italic;font-size:2.6rem;color:var(--accent);
+    line-height:1;margin-bottom:14px;
+  }
+  .step h3{font-family:'Manrope',sans-serif;font-weight:800;font-size:1.02rem;margin-bottom:10px;}
+  .step p{font-size:.87rem;color:var(--ink-soft);line-height:1.6;margin:0 0 16px;}
+  .step-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'IBM Plex Mono',monospace;font-size:.68rem;
+    padding:5px 9px;border-radius:7px;background:var(--line-soft);color:var(--ink-soft);
+  }
+  .step-arrow{
+    display:flex;align-items:center;justify-content:center;color:var(--line);
+    position:absolute;right:-24px;top:50%;transform:translateY(-50%);
+  }
+  @media (max-width:860px){ .step-arrow{display:none;} }
+
+  /* ---------- niches strip ---------- */
+  .niches{display:flex;flex-wrap:wrap;gap:9px;}
+  .niche-chip{
+    font-size:.8rem;font-weight:600;color:var(--ink-soft);
+    padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--paper-raised);
+  }
+
+  /* ---------- pricing ---------- */
+  .launch-banner{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent-soft);color:var(--accent);
+    font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:600;letter-spacing:.04em;
+    padding:7px 13px;border-radius:999px;margin-bottom:16px;text-transform:uppercase;
+  }
+  .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:stretch;}
+  @media (max-width:820px){ .price-grid{grid-template-columns:1fr;} }
+  .price-card{
+    background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius-l);
+    padding:34px 30px;display:flex;flex-direction:column;
+  }
+  .price-card.featured{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), var(--shadow);
+    position:relative;
+  }
+  .price-badge{
+    position:absolute;top:-13px;left:30px;
+    background:var(--accent);color:var(--accent-ink);
+    font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    padding:5px 12px;border-radius:999px;
+  }
+  .price-plan{font-size:.78rem;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;}
+  .price-card h3{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:600;margin:8px 0 4px;}
+  .price-card .sub{font-size:.84rem;color:var(--ink-soft);margin-bottom:22px;}
+  .price-row{display:flex;align-items:baseline;gap:10px;margin-bottom:2px;flex-wrap:wrap;}
+  .price-was{
+    font-family:'IBM Plex Mono',monospace;font-size:.95rem;color:var(--ink-faint);
+    text-decoration:line-through;
+  }
+  .price-now{font-family:'Fraunces',serif;font-weight:600;font-size:2.5rem;}
+  .price-unit{font-size:.85rem;color:var(--ink-soft);}
+  .price-alt{font-size:.78rem;color:var(--ink-faint);margin-bottom:22px;}
+  .price-feats{list-style:none;margin:0 0 26px;padding:0;display:flex;flex-direction:column;gap:11px;}
+  .price-feats li{
+    display:flex;align-items:flex-start;gap:9px;font-size:.85rem;color:var(--ink-soft);line-height:1.4;
+  }
+  .price-feats svg{flex:none;margin-top:2px;color:var(--good);}
+  .price-cta{margin-top:auto;}
+
+  /* ---------- faq ---------- */
+  .faq{max-width:760px;}
+  .faq-item{border-top:1px solid var(--line);padding:22px 0;}
+  .faq-item:last-child{border-bottom:1px solid var(--line);}
+  .faq-item summary{
+    cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    font-family:'Manrope',sans-serif;font-weight:700;font-size:.98rem;
+  }
+  .faq-item summary::-webkit-details-marker{display:none;}
+  .faq-item summary .plus{
+    flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);
+    font-size:.9rem;transition:transform .18s ease;
+  }
+  .faq-item[open] summary .plus{transform:rotate(45deg);border-color:var(--accent);color:var(--accent);}
+  .faq-item p{font-size:.88rem;color:var(--ink-soft);line-height:1.65;margin:14px 0 0;max-width:64ch;}
+
+  /* ---------- final cta ---------- */
+  .final{
+    background:var(--ink);color:var(--paper);border-radius:var(--radius-l);
+    padding:64px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;
+  }
+  .final h2{color:var(--paper);font-size:clamp(1.6rem,3vw,2.1rem);max-width:20ch;}
+  .final p{color:color-mix(in srgb, var(--paper) 68%, transparent);font-size:.92rem;margin-top:10px;max-width:42ch;}
+  .final .btn-primary{background:var(--accent);color:var(--accent-ink);}
+  .final .btn-ghost{border-color:color-mix(in srgb, var(--paper) 30%, transparent);color:var(--paper);}
+
+  /* ---------- footer ---------- */
+  footer{padding:56px 0 40px;border-top:1px solid var(--line-soft);}
+  .foot-grid{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;}
+  .foot-brand p{font-size:.82rem;color:var(--ink-faint);max-width:32ch;margin-top:12px;line-height:1.6;}
+  .foot-cols{display:flex;gap:56px;flex-wrap:wrap;}
+  .foot-col h4{
+    font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin-bottom:14px;
+  }
+  .foot-col a{display:block;font-size:.85rem;color:var(--ink-soft);text-decoration:none;margin-bottom:10px;}
+  .foot-col a:hover{color:var(--ink);}
+  .foot-bottom{
+    margin-top:48px;padding-top:24px;border-top:1px solid var(--line-soft);
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    font-size:.76rem;color:var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .radar-sweep{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="#top" class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      HypeLeads
+    </a>
+    <div class="navlist nav-links">
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#planos">Planos</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="/app/" id="nav-login">Entrar</a>
+      <a class="btn btn-primary" href="#planos">Começar agora</a>
+    </div>
+  </div>
+</nav>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Prospecção + IA para quem vende sites</span>
+        <h1>Ache o negócio local que <em>ainda não tem site</em>. Feche antes do seu concorrente.</h1>
+        <p class="lede">HypeLeads varre o OpenStreetMap por empresas sem presença online na cidade que você escolher, pontua cada uma por chance de fechamento e gera a landing page de demonstração com IA — pronta pra mandar no WhatsApp.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary btn-lg" href="#planos">Garantir meu acesso</a>
+          <a class="btn btn-ghost btn-lg" href="#como-funciona">Ver como funciona</a>
+        </div>
+        <div class="hero-fine">
+          <span><span class="dot-good"></span>Busca via OpenStreetMap</span>
+          <span><span class="dot-good"></span>Sites gerados com Google Gemini</span>
+          <span><span class="dot-good"></span>33 nichos de negócio prontos</span>
+        </div>
+      </div>
+
+      <div class="radar-panel">
+        <div class="radar-scan">
+          <div class="radar-label"><b>Curitiba, PR</b> · raio 10 km · oficina_mecanica</div>
+          <div class="radar-rings" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+            <div class="radar-sweep"></div>
+          </div>
+          <div class="radar-blip" style="left:38%; top:52%;"></div>
+          <div class="radar-blip" style="left:61%; top:38%;"></div>
+          <div class="radar-blip" style="left:52%; top:70%;"></div>
+        </div>
+        <div class="lead-feed">
+          <div class="lead-row">
+            <div class="lead-ava" style="background:#dc2626">AS</div>
+            <div class="lead-meta">
+              <div class="name">AutoCenter Silva</div>
+              <div class="sub">Oficina Mecânica · 3,4 km</div>
+            </div>
+            <span class="lead-tag">sem site</span>
+            <span class="lead-score">92</span>
+          </div>
+          <div class="lead-row">
+            <div class="lead-ava" style="background:#18181b">BV</div>
+            <div class="lead-meta">
+              <div class="name">Barbearia Vintage &amp; Estilo</div>
+              <div class="sub">Barbearia · 1,2 km</div>
+            </div>
+            <span class="lead-tag">sem site</span>
+            <span class="lead-score">90</span>
+          </div>
+          <div class="lead-row">
+            <div class="lead-ava" style="background:#0284c7">OS</div>
+            <div class="lead-meta">
+              <div class="name">Clínica OdontoSorriso</div>
+              <div class="sub">Clínica Odontológica · 2,1 km</div>
+            </div>
+            <span class="lead-tag">sem site</span>
+            <span class="lead-score">85</span>
+          </div>
+        </div>
+        <div class="radar-example-note">Exemplo ilustrativo do radar de busca — os resultados reais vêm do OpenStreetMap da região que você buscar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF -->
+  <section class="proof">
+    <div class="wrap">
+      <p class="proof-lede">Construído sobre bases de dados e IA reais, não sobre promessa.</p>
+      <div class="proof-marks">
+        <span class="proof-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.6"/></svg>
+          OpenStreetMap
+        </span>
+        <span class="proof-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Google Gemini AI
+        </span>
+        <span class="proof-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M8 4v5" stroke="currentColor" stroke-width="1.6"/></svg>
+          CRM em Kanban
+        </span>
+        <span class="proof-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 8-16 8 4-8-4-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Script pronto pro WhatsApp
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="funcionalidades">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Funcionalidades</span>
+        <h2>Da prospecção ao contrato fechado, numa aba só</h2>
+        <p>Nada de planilha, print de WhatsApp e site sem histórico. HypeLeads acompanha cada lead do primeiro radar até o "fechado".</p>
+      </div>
+
+      <div class="feat-grid">
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <h3>Radar de prospecção</h3>
+          <p>Escolha cidade, raio e nicho — o motor cruza dados do OpenStreetMap e devolve quem não tem site, com telefone e endereço prontos.</p>
+          <span class="tag">osm_search()</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <h3>Site gerado por IA</h3>
+          <p>O Gemini escreve headline, seções, depoimentos e FAQ de acordo com o nicho real do lead — sem inventar prêmio ou ano de fundação.</p>
+          <span class="tag">gemini-2.5-flash</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h3>Lead score 0–100</h3>
+          <p>Cada empresa recebe uma pontuação de oportunidade com base em telefone, WhatsApp, endereço completo e ausência de site.</p>
+          <span class="tag">leadScore</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="7" height="16" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="4" width="7" height="10" rx="1.4" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h3>CRM em funil</h3>
+          <p>Kanban com 9 estágios — de "Novo" a "Fechado" — com histórico de atividades, notas e follow-up de cada negociação.</p>
+          <span class="tag">pipeline</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 4l16 8-16 8 4-8-4-8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          <h3>Abordagem pronta</h3>
+          <p>Toda landing page sai com um texto de abordagem comercial pronto — é só colar no WhatsApp do dono do negócio.</p>
+          <span class="tag">mensagem_whatsapp</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <h3>Geração em lote</h3>
+          <p>Selecione vários resultados da busca e deixe a IA criar todas as landing pages em sequência, uma atrás da outra.</p>
+          <span class="tag">batch</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="13.5" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3 20a8 8 0 0116 0" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <h3>Editor visual do site</h3>
+          <p>Ajuste cores, textos e depoimentos direto na prévia antes de baixar o HTML ou apresentar pro cliente.</p>
+          <span class="tag">live preview</span>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Exportação &amp; backup</h3>
+          <p>Exporte seus leads e negociações em CSV a qualquer momento, ou faça backup completo do seu funil em JSON.</p>
+          <span class="tag">.csv / .json</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Como funciona</span>
+        <h2>Três passos, do radar até o "fechado"</h2>
+        <p>É a mesma sequência que uma agência já faz na mão — só que sem gastar a tarde inteira nela.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <h3>Rode o radar na sua cidade</h3>
+          <p>Escolha estado, cidade, nicho e raio de busca. O HypeLeads consulta o OpenStreetMap e classifica quem está sem site por chance de conversão.</p>
+          <span class="step-chip">33 nichos · raio 2–30 km</span>
+          <div class="step-arrow" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <h3>Gere a landing page com IA</h3>
+          <p>Com um clique, o Gemini escreve headline, serviços, depoimentos e FAQ — e você ainda pode ajustar cores e textos no editor visual.</p>
+          <span class="step-chip">MODERN · PREMIUM · LOCAL · MINIMAL · BOLD</span>
+          <div class="step-arrow" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h3>Aborde e acompanhe no CRM</h3>
+          <p>Envie a demonstração pelo WhatsApp com o script pronto, mova o card pelo funil e registre o fechamento com valor do negócio.</p>
+          <span class="step-chip">Novo → Mensagem → Fechado</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NICHES -->
+  <section style="padding-top:0;">
+    <div class="wrap">
+      <div class="niches">
+        <span class="niche-chip">Barbearia</span>
+        <span class="niche-chip">Oficina Mecânica</span>
+        <span class="niche-chip">Clínica Odontológica</span>
+        <span class="niche-chip">Advocacia</span>
+        <span class="niche-chip">Restaurante</span>
+        <span class="niche-chip">Academia</span>
+        <span class="niche-chip">Ar-condicionado</span>
+        <span class="niche-chip">Pet Shop</span>
+        <span class="niche-chip">Salão de Beleza</span>
+        <span class="niche-chip">Fisioterapia</span>
+        <span class="niche-chip">+ 23 outros nichos</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="planos">
+    <div class="wrap">
+      <div class="head">
+        <span class="launch-banner">Oferta de lançamento</span>
+        <h2>Dois jeitos de começar, mesmo acesso completo</h2>
+        <p>Sem plano gratuito capado — você escolhe só a forma de pagar. As duas opções liberam a plataforma inteira.</p>
+      </div>
+
+      <div class="price-grid">
+        <div class="price-card">
+          <span class="price-plan">Plano Mensal</span>
+          <h3>Acesso completo por mês</h3>
+          <p class="sub">Renovação automática mensal, cancele quando quiser.</p>
+          <div class="price-row">
+            <span class="price-was mono">R$ 247</span>
+            <span class="price-now">R$ 169</span>
+            <span class="price-unit">/ mês</span>
+          </div>
+          <p class="price-alt">Cobrado mensalmente no cartão ou Pix</p>
+          <ul class="price-feats">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Radar de prospecção com 33 nichos</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Geração de sites com IA sem limite de quantidade</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>CRM em Kanban com histórico completo</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Geração em lote e editor visual</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Exportação CSV e backup JSON</li>
+          </ul>
+          <a class="btn btn-ghost btn-block btn-lg price-cta" href="/app/">Assinar plano mensal</a>
+        </div>
+
+        <div class="price-card featured">
+          <span class="price-badge">Acesso vitalício</span>
+          <span class="price-plan">Pagamento único</span>
+          <h3>Acesso pra sempre</h3>
+          <p class="sub">Paga uma vez, usa para sempre — sem mensalidade.</p>
+          <div class="price-row">
+            <span class="price-was mono">R$ 497</span>
+            <span class="price-now">R$ 249</span>
+            <span class="price-unit">à vista no Pix</span>
+          </div>
+          <p class="price-alt">ou 6x de R$ 47,74 no cartão</p>
+          <ul class="price-feats">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Tudo do plano mensal, sem cobrança recorrente</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Todas as atualizações futuras da plataforma</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Radar de prospecção com 33 nichos</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Geração de sites com IA sem limite de quantidade</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5 5L20 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>CRM, geração em lote e editor visual</li>
+          </ul>
+          <a class="btn btn-primary btn-block btn-lg price-cta" href="/app/">Garantir acesso vitalício</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Perguntas frequentes</span>
+        <h2>O que você precisa saber antes de começar</h2>
+      </div>
+      <div class="faq">
+        <details class="faq-item" open>
+          <summary>Preciso saber programar pra usar o HypeLeads?<span class="plus">+</span></summary>
+          <p>Não. Você escolhe cidade, raio e nicho, a IA escreve o conteúdo e você exporta o HTML pronto — sem precisar escrever uma linha de código.</p>
+        </details>
+        <details class="faq-item">
+          <summary>De onde vêm os dados das empresas?<span class="plus">+</span></summary>
+          <p>Do OpenStreetMap, a mesma base de mapas colaborativa usada por diversos apps de navegação. Buscamos nome, categoria, telefone, endereço e horário de funcionamento de cada estabelecimento.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Eu preciso hospedar os sites que gero?<span class="plus">+</span></summary>
+          <p>O HypeLeads gera o HTML completo pra você baixar e hospedar onde preferir — é o site de demonstração que você usa pra fechar o cliente. Hospedagem definitiva fica a critério de cada agência.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Qual a diferença entre o plano mensal e o vitalício?<span class="plus">+</span></summary>
+          <p>Nenhuma funcionalidade — os dois liberam a plataforma inteira. A diferença é só a forma de pagar: assinatura recorrente todo mês, ou um pagamento único sem mensalidade nunca mais.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Funciona pra qualquer cidade do Brasil?<span class="plus">+</span></summary>
+          <p>Sim. Basta digitar o estado e a cidade — a cobertura depende só de quantos estabelecimentos já estão cadastrados no OpenStreetMap daquela região.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Posso cancelar o plano mensal quando quiser?<span class="plus">+</span></summary>
+          <p>Sim, a renovação é mensal e você cancela quando quiser, sem multa. Se prefere não pensar nisso de novo, o plano vitalício resolve com um pagamento só.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section>
+    <div class="wrap">
+      <div class="final">
+        <div>
+          <h2>Enquanto você decide, alguém já está batendo na porta desse cliente.</h2>
+          <p>Crie sua conta, rode o primeiro radar na sua cidade e veja quantos negócios sem site existem perto de você.</p>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a class="btn btn-primary btn-lg" href="#planos">Ver planos</a>
+          <a class="btn btn-ghost btn-lg" href="/app/">Já tenho conta</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="foot-brand">
+          <a href="#top" class="brand"><span class="brand-mark" aria-hidden="true"></span>HypeLeads</a>
+          <p>Prospecção local via OpenStreetMap e geração de sites com IA para quem vende presença online pra pequenos negócios.</p>
+        </div>
+        <div class="foot-cols">
+          <div class="foot-col">
+            <h4>Produto</h4>
+            <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#como-funciona">Como funciona</a>
+            <a href="#planos">Planos</a>
+            <a href="#faq">FAQ</a>
+          </div>
+          <div class="foot-col">
+            <h4>Conta</h4>
+            <a href="/app/">Entrar</a>
+            <a href="/app/">Criar conta</a>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 HypeLeads. Todos os direitos reservados.</span>
+        <span>Dados de negócios via OpenStreetMap · Geração de conteúdo via Google Gemini</span>
+      </div>
+    </div>
+  </footer>
+</main>
+</body>
+</html>

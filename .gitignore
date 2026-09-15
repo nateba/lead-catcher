@@ -12,3 +12,6 @@ coverage/
 .playwright-mcp/
 leadsite-ai.zip
 supabase/.temp/
+
+.vercel
+.env*
