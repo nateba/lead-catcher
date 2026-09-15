@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BackgroundVelvet } from './components/BackgroundVelvet';
+import Velaris from './components/Velaris';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { LeadIntelligenceSection } from './components/LeadIntelligenceSection';
@@ -36,8 +36,17 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-[#020103] text-[#F4F2F7] overflow-x-hidden selection:bg-[#8126C2]/40 selection:text-[#B65AF0]">
-      {/* Cinematic Velvet Dark Lighting Foundation */}
-      <BackgroundVelvet />
+      {/* Living animated gradient background (WebGL simplex noise) */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <Velaris
+          height="100%"
+          className="h-full"
+          bg="#020103"
+          colors={["#8126C2", "#9436D9", "#36145A", "#020103"]}
+          speed={0.6}
+          grain={0.25}
+        />
+      </div>
 
       {/* Interactive Fixed Navbar */}
       <Navbar onOpenCheckout={handleOpenCheckout} />
