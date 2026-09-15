@@ -3,6 +3,7 @@
   "buildCommand": "vite build",
   "outputDirectory": "dist",
   "functions": {
+    "api/**/*.ts": { "includeFiles": "api/_lib/**" },
     "api/generate-site.ts": { "maxDuration": 60 },
     "api/regenerate-testimonials.ts": { "maxDuration": 60 }
   }
