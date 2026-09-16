@@ -20,6 +20,8 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { ToastProvider, useToast } from './components/Toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/auth/AuthScreen';
+import { PaywallScreen } from './components/auth/PaywallScreen';
+import { AdminPanel } from './components/AdminPanel';
 import { searchLeads } from './services/osmService';
 import { generateSiteContent } from './services/geminiService';
 import {
@@ -34,7 +36,15 @@ import { Loader2 } from 'lucide-react';
 
 function AppContent() {
   const { showToast } = useToast();
-  const { session, user, isLoading: isAuthLoading, signOut } = useAuth();
+  const {
+    session,
+    user,
+    isLoading: isAuthLoading,
+    hasActiveSubscription,
+    isAdmin,
+    isAccessLoading,
+    signOut,
+  } = useAuth();
 
   // App Settings & Theme
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -250,6 +260,18 @@ function AppContent() {
     return <AuthScreen />;
   }
 
+  if (isAccessLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!hasActiveSubscription && !isAdmin) {
+    return <PaywallScreen />;
+  }
+
   if (isDataLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950">
@@ -270,6 +292,7 @@ function AppContent() {
         crmCount={savedLeads.length}
         userEmail={user?.email || ''}
         onSignOut={signOut}
+        isAdmin={isAdmin}
       />
 
       {/* Main Content Area */}
@@ -334,6 +357,9 @@ function AppContent() {
                 onOpenOnboarding={() => setIsOnboardingOpen(true)}
               />
             )}
+
+            {/* TAB 5: ADMIN (only reachable when Navigation renders the tab, i.e. isAdmin) */}
+            {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </div>
         </main>
       </div>

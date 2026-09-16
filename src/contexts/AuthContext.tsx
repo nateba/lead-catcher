@@ -6,6 +6,9 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
+  hasActiveSubscription: boolean;
+  isAdmin: boolean;
+  isAccessLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
@@ -17,6 +20,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAccessLoading, setIsAccessLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -30,6 +36,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Access checks (subscription status + admin flag) run separately from the
+  // session bootstrap above — neither should block the other from resolving.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      setHasActiveSubscription(false);
+      setIsAdmin(false);
+      setIsAccessLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsAccessLoading(true);
+
+    (async () => {
+      const [subResult, profileResult] = await Promise.allSettled([
+        supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .limit(1)
+          .maybeSingle(),
+        supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle(),
+      ]);
+
+      if (cancelled) return;
+
+      setHasActiveSubscription(subResult.status === 'fulfilled' && !!subResult.value.data);
+      setIsAdmin(
+        profileResult.status === 'fulfilled' && !!(profileResult.value.data as { is_admin?: boolean } | null)?.is_admin
+      );
+      setIsAccessLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -54,7 +100,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, isLoading, signIn, signUp, signOut, updatePassword }}
+      value={{
+        session,
+        user: session?.user ?? null,
+        isLoading,
+        hasActiveSubscription,
+        isAdmin,
+        isAccessLoading,
+        signIn,
+        signUp,
+        signOut,
+        updatePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

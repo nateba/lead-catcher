@@ -1,5 +1,12 @@
 import { LeadStatus, AppSettings } from '../types';
 
+// Kept in sync with src/landing/App.tsx's CHECKOUT_URLS (separate Vite entry,
+// so not literally shared) and api/webhooks/applyfy.ts's OFFER_TO_PLAN map.
+export const CHECKOUT_URLS: Record<string, string> = {
+  mensal: 'https://checkout.applyfy.com.br/checkout/cmu2vbt1y0jqv01pwpekeuyx2?offer=YKR5ZRD',
+  vitalicio: 'https://checkout.applyfy.com.br/checkout/cmu2wb7u50l9201oh3jbdn2dn?offer=SPN02ZK',
+};
+
 export const STORAGE_KEYS = {
   LEADS: 'leadsite_crm_leads_v2',
   SETTINGS: 'leadsite_settings_v2',

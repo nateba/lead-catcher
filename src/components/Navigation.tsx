@@ -10,6 +10,7 @@ import {
   Sparkles,
   Zap,
   LogOut,
+  ShieldCheck,
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
@@ -22,6 +23,7 @@ interface NavigationProps {
   crmCount: number;
   userEmail: string;
   onSignOut: () => void;
+  isAdmin?: boolean;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -33,6 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   crmCount,
   userEmail,
   onSignOut,
+  isAdmin = false,
 }) => {
   const navItems = [
     { id: 'search' as ActiveTab, label: 'Buscar Leads', icon: Search, badge: null },
@@ -44,6 +47,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
     { id: 'metrics' as ActiveTab, label: 'Métricas', icon: BarChart3, badge: null },
     { id: 'settings' as ActiveTab, label: 'Configurações', icon: Settings, badge: null },
+    ...(isAdmin
+      ? [{ id: 'admin' as ActiveTab, label: 'Admin', icon: ShieldCheck, badge: null }]
+      : []),
   ];
 
   return (

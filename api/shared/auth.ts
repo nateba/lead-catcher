@@ -39,6 +39,26 @@ export async function requireUser(req: VercelRequest, res: VercelResponse): Prom
   return { userId: data.user.id, supabase };
 }
 
+// Same as requireUser, but also requires the profiles.is_admin flag — used to
+// gate the /api/admin/* endpoints behind the internal admin panel.
+export async function requireAdmin(req: VercelRequest, res: VercelResponse): Promise<AuthedRequest | null> {
+  const auth = await requireUser(req, res);
+  if (!auth) return null;
+
+  const { data } = await auth.supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', auth.userId)
+    .maybeSingle();
+
+  if (!data?.is_admin) {
+    res.status(403).json({ error: 'Acesso restrito a administradores.' });
+    return null;
+  }
+
+  return auth;
+}
+
 // Same as requireUser, but also requires an active paid subscription for AI-cost endpoints.
 export async function requireActiveSubscription(
   req: VercelRequest,
@@ -47,14 +67,17 @@ export async function requireActiveSubscription(
   const auth = await requireUser(req, res);
   if (!auth) return null;
 
-  const { data } = await auth.supabase
-    .from('subscriptions')
-    .select('status')
-    .eq('user_id', auth.userId)
-    .eq('status', 'active')
-    .maybeSingle();
+  const [{ data: subscription }, { data: profile }] = await Promise.all([
+    auth.supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', auth.userId)
+      .eq('status', 'active')
+      .maybeSingle(),
+    auth.supabase.from('profiles').select('is_admin').eq('id', auth.userId).maybeSingle(),
+  ]);
 
-  if (!data) {
+  if (!subscription && !profile?.is_admin) {
     res.status(403).json({
       error: 'Assinatura ativa necessária para usar a geração com IA. Assine um plano para continuar.',
     });
