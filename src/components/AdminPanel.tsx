@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown } from 'lucide-react';
+import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown, UserPlus } from 'lucide-react';
 import { authHeaders } from '../lib/apiAuth';
 import { useToast } from './Toast';
 
@@ -24,6 +24,9 @@ export const AdminPanel: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPlan, setNewPlan] = useState<'mensal' | 'vitalicio'>('vitalicio');
+  const [isAddingUser, setIsAddingUser] = useState(false);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -67,6 +70,35 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    const trimmed = newEmail.trim();
+    if (!trimmed || !trimmed.includes('@')) {
+      showToast('E-mail inválido', 'Digite um e-mail válido.', 'error');
+      return;
+    }
+
+    setIsAddingUser(true);
+    try {
+      const res = await fetch('/api/admin/add-user', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ email: trimmed, plan: newPlan }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao adicionar usuário.');
+      showToast(
+        data.created ? 'Conta criada e acesso liberado!' : 'Acesso liberado para conta existente!',
+        data.created ? `Senha padrão: hypeleads123` : undefined
+      );
+      setNewEmail('');
+      await loadUsers();
+    } catch (err: any) {
+      showToast('Erro ao adicionar usuário', err.message, 'error');
+    } finally {
+      setIsAddingUser(false);
+    }
+  };
+
   return (
     <div id="admin-panel-container" className="max-w-5xl mx-auto space-y-6">
       <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between gap-4 flex-wrap">
@@ -88,6 +120,46 @@ export const AdminPanel: React.FC = () => {
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           Atualizar
         </button>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <UserPlus className="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Adicionar Usuário por E-mail</h3>
+            <p className="text-xs text-slate-400">
+              Se a conta não existir, é criada com a senha padrão (hypeleads123)
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            placeholder="email@exemplo.com"
+            className="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          />
+          <select
+            value={newPlan}
+            onChange={(e) => setNewPlan(e.target.value as 'mensal' | 'vitalicio')}
+            className="px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          >
+            <option value="vitalicio">Vitalício</option>
+            <option value="mensal">Mensal</option>
+          </select>
+          <button
+            type="button"
+            onClick={handleAddUser}
+            disabled={isAddingUser || !newEmail.trim()}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-md shadow-emerald-500/25 transition-all whitespace-nowrap"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            {isAddingUser ? 'Adicionando...' : 'Adicionar'}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
