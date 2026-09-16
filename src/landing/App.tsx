@@ -38,11 +38,13 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#020103] text-[#F4F2F7] overflow-x-hidden selection:bg-[#8126C2]/40 selection:text-[#B65AF0]">
+    <div className="relative min-h-screen text-[#F4F2F7] overflow-x-hidden selection:bg-[#8126C2]/40 selection:text-[#B65AF0]">
       {/* Living fluid WebGL background (three.js simplex-noise shader) */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <FluidFieldBackground className="w-full h-full" />
       </div>
+      {/* Dark scrim so body text stays readable over the bright parts of the shader */}
+      <div className="fixed inset-0 -z-10 pointer-events-none bg-[#020103]/55" />
 
       {/* Interactive Fixed Navbar */}
       <Navbar onOpenCheckout={handleOpenCheckout} />
