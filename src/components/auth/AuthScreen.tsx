@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Zap, Mail, Lock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { HypeLeadsLogo } from '../BrandLogo';
 
 export const AuthScreen: React.FC = () => {
   const { signIn, signUp } = useAuth();
@@ -37,26 +38,15 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950 p-4">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-950 p-4">
+      <div className="app-ambient-glow pointer-events-none absolute inset-0" />
+      <div className="relative w-full max-w-sm bg-slate-900 rounded-2xl border border-[#25123A] shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_50px_rgba(129,38,194,0.18)] p-6 sm:p-8">
         {/* Brand */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <Zap className="w-5 h-5 fill-white/20" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
-                LeadSite
-              </span>
-              <span className="text-xs px-1.5 py-0.5 rounded font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                AI
-              </span>
-            </div>
-            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-              {mode === 'signin' ? 'Entre na sua conta' : 'Crie sua conta'}
-            </p>
-          </div>
+        <div className="mb-6">
+          <HypeLeadsLogo size="md" />
+          <p className="text-[11px] font-medium text-slate-500 mt-1.5">
+            {mode === 'signin' ? 'Entre na sua conta' : 'Crie sua conta'}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

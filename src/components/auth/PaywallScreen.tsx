@@ -7,8 +7,9 @@ export const PaywallScreen: React.FC = () => {
   const { user, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl p-6 sm:p-8 text-center">
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-950 p-4">
+      <div className="app-ambient-glow pointer-events-none absolute inset-0" />
+      <div className="relative w-full max-w-md bg-slate-900 rounded-2xl border border-[#25123A] shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_50px_rgba(129,38,194,0.18)] p-6 sm:p-8 text-center">
         <div className="w-12 h-12 mx-auto rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 mb-4">
           <Lock className="w-5 h-5" />
         </div>
@@ -18,7 +19,7 @@ export const PaywallScreen: React.FC = () => {
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
           {user?.email ? `A conta ${user.email} ainda` : 'Sua conta ainda'} não tem um plano pago
-          confirmado. Assine para liberar o acesso ao LeadSite AI.
+          confirmado. Assine para liberar o acesso ao HypeLeads.
         </p>
 
         <div className="mt-6 space-y-2.5 text-left">

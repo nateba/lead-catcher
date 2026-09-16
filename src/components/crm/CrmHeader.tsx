@@ -190,7 +190,7 @@ export const CrmHeader: React.FC<CrmHeaderProps> = ({
           onClick={() => setQuickFilter('all')}
           className={`px-3 py-1.5 rounded-xl border transition-all whitespace-nowrap ${
             quickFilter === 'all'
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-xs'
+              ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white border-transparent shadow-[0_0_14px_rgba(129,38,194,0.4)]'
               : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-300'
           }`}
         >

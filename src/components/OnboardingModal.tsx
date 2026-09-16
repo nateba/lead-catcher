@@ -17,7 +17,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
       title: '1. Busca 100% Gratuita no OpenStreetMap',
       subtitle: 'Encontre negócios locais sem custos de API',
       description:
-        'O LeadSite AI consulta a base pública do OpenStreetMap via Overpass API para descobrir empresas reais da sua região que NÃO possuem site próprio registrado.',
+        'O HypeLeads consulta a base pública do OpenStreetMap via Overpass API para descobrir empresas reais da sua região que NÃO possuem site próprio registrado.',
       icon: Search,
       badge: 'Sem Cartão de Crédito',
       color: 'from-indigo-500 to-blue-600',

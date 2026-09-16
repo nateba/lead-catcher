@@ -395,7 +395,7 @@ export function renderFooter(lead: Lead): string {
   <footer>
     <div class="container">
       <p><strong>${escapeHtml(lead.name)}</strong> — ${escapeHtml(lead.city)}${lead.state ? `, ${escapeHtml(lead.state)}` : ''}</p>
-      <p class="footer-note">Página modelo desenvolvida com LeadSite AI • ${new Date().getFullYear()}</p>
+      <p class="footer-note">Página modelo desenvolvida com HypeLeads • ${new Date().getFullYear()}</p>
     </div>
   </footer>`;
 }

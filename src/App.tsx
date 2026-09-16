@@ -46,12 +46,9 @@ function AppContent() {
     signOut,
   } = useAuth();
 
-  // App Settings & Theme
+  // App Settings
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<ActiveTab>('search');
@@ -96,7 +93,6 @@ function AppContent() {
       const [loadedSettings, loadedLeads] = await Promise.all([getSettings(), getSavedLeads()]);
       if (cancelled) return;
       setSettings(loadedSettings);
-      setDarkMode(loadedSettings.darkMode || window.matchMedia('(prefers-color-scheme: dark)').matches);
       setSavedLeads(loadedLeads);
       setIsDataLoading(false);
       if (!loadedSettings.onboardingCompleted) {
@@ -108,18 +104,6 @@ function AppContent() {
       cancelled = true;
     };
   }, [session]);
-
-  // Sync Dark mode with DOM
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    if (!isDataLoading) {
-      saveSettings({ darkMode });
-    }
-  }, [darkMode]);
 
   const handleCloseOnboarding = async () => {
     setIsOnboardingOpen(false);
@@ -250,7 +234,7 @@ function AppContent() {
   // Auth gate: still resolving session, or no session at all
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950">
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
       </div>
     );
@@ -262,7 +246,7 @@ function AppContent() {
 
   if (isAccessLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950">
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
       </div>
     );
@@ -274,20 +258,21 @@ function AppContent() {
 
   if (isDataLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-slate-100/60 dark:bg-slate-950">
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-full bg-slate-100/60 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
+    <div className="relative flex h-screen w-full bg-slate-950 font-sans text-slate-100 overflow-hidden">
+      {/* Ambient violet wash, echoing the landing page's lit backdrop */}
+      <div className="app-ambient-glow pointer-events-none absolute inset-0 z-0" />
+
       {/* Sidebar */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
         onOpenOnboarding={() => setIsOnboardingOpen(true)}
         crmCount={savedLeads.length}
         userEmail={user?.email || ''}

@@ -4,21 +4,17 @@ import {
   Users,
   BarChart3,
   Settings,
-  Sun,
-  Moon,
   HelpCircle,
   Sparkles,
-  Zap,
   LogOut,
   ShieldCheck,
 } from 'lucide-react';
 import { ActiveTab } from '../types';
+import { HypeLeadsLogo } from './BrandLogo';
 
 interface NavigationProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
-  darkMode: boolean;
-  setDarkMode: (val: boolean) => void;
   onOpenOnboarding: () => void;
   crmCount: number;
   userEmail: string;
@@ -29,8 +25,6 @@ interface NavigationProps {
 export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   setActiveTab,
-  darkMode,
-  setDarkMode,
   onOpenOnboarding,
   crmCount,
   userEmail,
@@ -60,25 +54,11 @@ export const Navigation: React.FC<NavigationProps> = ({
         className="hidden md:flex flex-col w-64 border-r border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shrink-0 select-none z-30 transition-colors h-full"
       >
         {/* Brand */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <Zap className="w-5 h-5 fill-white/20" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
-                  LeadSite
-                </span>
-                <span className="text-xs px-1.5 py-0.5 rounded font-bold bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                  AI
-                </span>
-              </div>
-              <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                Prospecção OpenStreetMap
-              </p>
-            </div>
-          </div>
+        <div className="p-6 border-b border-slate-800/80 shrink-0">
+          <HypeLeadsLogo size="md" />
+          <p className="text-[11px] font-medium text-slate-500 mt-1.5 pl-0.5">
+            Prospecção OpenStreetMap + IA
+          </p>
         </div>
 
         {/* Navigation Items */}
@@ -93,12 +73,12 @@ export const Navigation: React.FC<NavigationProps> = ({
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white shadow-[0_0_20px_rgba(129,38,194,0.45)]'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge !== null && (
@@ -117,16 +97,16 @@ export const Navigation: React.FC<NavigationProps> = ({
           })}
         </nav>
 
-        {/* Free Plan & Credits Notice */}
-        <div className="p-4 m-3 rounded-xl bg-gradient-to-br from-indigo-50/60 to-purple-50/60 dark:from-slate-800/40 dark:to-indigo-950/20 border border-indigo-100 dark:border-slate-800 shrink-0">
+        {/* Plan status */}
+        <div className="p-4 m-3 rounded-xl bg-gradient-to-br from-[#1C0D2A]/80 to-[#0d0813]/60 border border-[#25123A] shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Operação 100% Free
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span className="text-xs font-bold text-slate-200">
+              {isAdmin ? 'Acesso Admin' : 'Plano Ativo'}
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Buscas via Overpass API & criação de sites via Gemini AI sem custos.
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Prospecção ilimitada no OpenStreetMap e criação de sites com IA.
           </p>
         </div>
 

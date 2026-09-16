@@ -260,7 +260,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
               Parados / Atrasados
             </p>
             <h3 className={`text-2xl font-extrabold ${stats.staleLeads + stats.overdueFollowUps > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}>
-              {stats.staleLeads} <span className="text-xs font-normal text-slate-400">({stats.overdueFollowUps} follow-ups)</span>
+              {stats.staleLeads} <span className="font-sans text-xs font-normal text-slate-400 whitespace-nowrap">({stats.overdueFollowUps} follow-ups)</span>
             </h3>
           </div>
         </div>

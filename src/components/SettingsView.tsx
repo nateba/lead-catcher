@@ -90,7 +90,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Configurações do LeadSite AI
+              Configurações do HypeLeads
             </h2>
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
@@ -235,7 +235,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             type="button"
             onClick={handleUpdatePassword}
             disabled={isUpdatingPassword || !newPassword || !confirmPassword}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-md shadow-amber-500/25 transition-all"
+            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-violet-600 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-md shadow-indigo-500/25 transition-all"
           >
             {isUpdatingPassword ? 'Atualizando...' : 'Atualizar Senha'}
           </button>

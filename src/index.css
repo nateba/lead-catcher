@@ -1,8 +1,80 @@
 @import "tailwindcss";
 
+/* The app is dark-only, matching the landing page. `dark:` is class-based so it
+   never falls back to the visitor's OS preference — <html class="dark"> in
+   app/index.html is what switches it on. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Unbounded", system-ui, sans-serif;
+  --font-sans: "Manrope", system-ui, sans-serif;
+
+  /* Neutral ramp remapped from Tailwind's blue-grey slate to the landing's
+     violet-tinted near-blacks. Dark end = surfaces, light end = text, so every
+     existing `dark:bg-slate-900` / `dark:text-slate-400` keeps its meaning. */
+  --color-slate-950: #020103;
+  --color-slate-900: #070510;
+  --color-slate-800: #130c23;
+  --color-slate-700: #1f1030;
+  --color-slate-600: #2a1540;
+  --color-slate-500: #7d7889;
+  --color-slate-400: #98949e;
+  --color-slate-300: #bdb9c6;
+  --color-slate-200: #d9d6df;
+  --color-slate-100: #ebe9ef;
+  --color-slate-50: #f4f2f7;
+
+  /* Primary accent: HypeLeads violet. indigo-600 is the landing's button fill
+     and indigo-400 its bright on-dark accent. */
+  --color-indigo-950: #1a0a28;
+  --color-indigo-900: #2a0f42;
+  --color-indigo-800: #3d1660;
+  --color-indigo-700: #661e9c;
+  --color-indigo-600: #8126c2;
+  --color-indigo-500: #9436d9;
+  --color-indigo-400: #b65af0;
+  --color-indigo-300: #cb8bf5;
+  --color-indigo-200: #dfb6fa;
+  --color-indigo-100: #eedcfc;
+  --color-indigo-50: #f8effe;
+
+  /* violet/purple sit one step brighter so gradient pairs like
+     `from-indigo-600 to-violet-600` reproduce the landing's #8126C2 → #9436D9. */
+  --color-violet-950: #1f0c31;
+  --color-violet-900: #33124f;
+  --color-violet-800: #481a6f;
+  --color-violet-700: #7422b0;
+  --color-violet-600: #9436d9;
+  --color-violet-500: #a748e4;
+  --color-violet-400: #b65af0;
+  --color-violet-300: #cb8bf5;
+  --color-violet-200: #dfb6fa;
+  --color-violet-100: #eedcfc;
+  --color-violet-50: #f8effe;
+
+  --color-purple-950: #1f0c31;
+  --color-purple-900: #33124f;
+  --color-purple-800: #481a6f;
+  --color-purple-700: #7422b0;
+  --color-purple-600: #9436d9;
+  --color-purple-500: #a748e4;
+  --color-purple-400: #b65af0;
+  --color-purple-300: #cb8bf5;
+  --color-purple-200: #dfb6fa;
+  --color-purple-100: #eedcfc;
+  --color-purple-50: #f8effe;
+}
+
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: var(--font-sans);
+    background-color: #020103;
+    color: #f4f2f7;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }
 
@@ -17,12 +89,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(129, 38, 194, 0.45);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.6);
+  background: rgba(182, 90, 240, 0.65);
 }
 
 /* Leaflet map styles */
@@ -33,15 +105,46 @@
   z-index: 10;
 }
 
+/* Leaflet's default tiles and chrome are built for light UIs — knock them back
+   so the map reads as part of the dark violet surface around it. */
+.leaflet-container {
+  background: #070510;
+}
+
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.7);
+}
+
+.leaflet-control-zoom a,
+.leaflet-bar a {
+  background: #130c23;
+  color: #f4f2f7;
+  border-color: #1f1030;
+}
+
+.leaflet-control-zoom a:hover,
+.leaflet-bar a:hover {
+  background: #1f1030;
+}
+
+.leaflet-control-attribution {
+  background: rgba(2, 1, 3, 0.7) !important;
+  color: #7d7889 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #98949e !important;
+}
+
 /* Smooth pulse animation */
 @keyframes soft-pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 0 0 rgba(129, 38, 194, 0.5);
   }
   50% {
     transform: scale(1.02);
-    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 10px rgba(129, 38, 194, 0);
   }
 }
 
@@ -49,3 +152,9 @@
   animation: soft-pulse 2.5s infinite ease-in-out;
 }
 
+/* Ambient violet wash behind the app shell, echoing the landing's lit backdrop. */
+.app-ambient-glow {
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 0%, rgba(129, 38, 194, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 85% 100%, rgba(54, 20, 90, 0.18) 0%, transparent 65%);
+}
