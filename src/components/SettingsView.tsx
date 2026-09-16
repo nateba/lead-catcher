@@ -6,10 +6,12 @@ import {
   Download,
   Building,
   RotateCcw,
+  Lock,
 } from 'lucide-react';
 import { AppSettings, SavedLead } from '../types';
 import { saveSettings, clearAllLocalData, exportLeadsToCsv } from '../services/storageService';
 import { useToast } from './Toast';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsViewProps {
   settings: AppSettings;
@@ -27,9 +29,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onOpenOnboarding,
 }) => {
   const { showToast } = useToast();
+  const { updatePassword } = useAuth();
   const [overpassServer, setOverpassServer] = useState(settings.overpassServer || 'auto');
   const [agencyName, setAgencyName] = useState(settings.agencyName || 'Minha Agência Digital');
   const [userName, setUserName] = useState(settings.userName || 'Consultor Digital');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const handleSave = async () => {
     const updated = await saveSettings({
@@ -39,6 +45,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
     onUpdateSettings(updated);
     showToast('Configurações salvas com sucesso!');
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword.length < 6) {
+      showToast('Senha muito curta', 'A nova senha precisa ter pelo menos 6 caracteres.', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('As senhas não coincidem', 'Digite a mesma senha nos dois campos.', 'error');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setIsUpdatingPassword(false);
+
+    if (error) {
+      showToast('Erro ao atualizar senha', error, 'error');
+      return;
+    }
+
+    setNewPassword('');
+    setConfirmPassword('');
+    showToast('Senha atualizada com sucesso!');
   };
 
   const handleClearData = async () => {
@@ -150,6 +180,65 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
             />
           </div>
+        </div>
+      </div>
+
+      {/* 3.5. Security / Change Password */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Segurança / Alterar Senha
+            </h3>
+            <p className="text-xs text-slate-400">
+              Defina uma nova senha para acessar sua conta
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="new-password-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Nova Senha
+            </label>
+            <input
+              id="new-password-input"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              autoComplete="new-password"
+              className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
+            />
+          </div>
+          <div>
+            <label htmlFor="confirm-password-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Confirmar Nova Senha
+            </label>
+            <input
+              id="confirm-password-input"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repita a nova senha"
+              autoComplete="new-password"
+              className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleUpdatePassword}
+            disabled={isUpdatingPassword || !newPassword || !confirmPassword}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-md shadow-amber-500/25 transition-all"
+          >
+            {isUpdatingPassword ? 'Atualizando...' : 'Atualizar Senha'}
+          </button>
         </div>
       </div>
 
