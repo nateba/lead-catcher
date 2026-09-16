@@ -485,9 +485,9 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             </p>
           </div>
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-[11px] text-indigo-200">Custo Operacional de API</p>
+            <p className="text-[11px] text-indigo-200">Custo Extra por Busca ou Site</p>
             <p className="text-xl font-extrabold text-white mt-0.5">
-              R$ 0,00 (100% Gratuito)
+              R$ 0,00 (incluso no plano)
             </p>
           </div>
         </div>

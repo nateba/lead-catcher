@@ -14,13 +14,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
   const steps = [
     {
       step: 1,
-      title: '1. Busca 100% Gratuita no OpenStreetMap',
-      subtitle: 'Encontre negócios locais sem custos de API',
+      title: '1. Radar de Empresas no OpenStreetMap',
+      subtitle: 'Encontre negócios locais que ainda não têm site',
       description:
-        'O HypeLeads consulta a base pública do OpenStreetMap via Overpass API para descobrir empresas reais da sua região que NÃO possuem site próprio registrado.',
+        'O HypeLeads varre a base do OpenStreetMap na cidade e no nicho que você escolher, e mostra empresas reais — com telefone e endereço — que ainda não possuem site próprio.',
       icon: Search,
-      badge: 'Sem Cartão de Crédito',
-      color: 'from-indigo-500 to-blue-600',
+      badge: 'Buscas Ilimitadas',
+      color: 'from-indigo-500 to-violet-600',
     },
     {
       step: 2,
