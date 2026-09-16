@@ -24,6 +24,10 @@ const OFFER_TO_PLAN: Record<string, 'mensal' | 'vitalicio'> = {
   cmu2wb7u50l9201oh3jbdn2dn: 'vitalicio',
 };
 
+// Assigned to accounts auto-created on first payment so the buyer can log in
+// immediately; they're expected to change it from Configurações afterwards.
+const DEFAULT_PASSWORD = 'hypeleads123';
+
 const APPROVED_HINTS = ['aprov', 'approved', 'paid', 'pago', 'completed', 'confirmad'];
 const REVOKE_HINTS = ['reembols', 'refund', 'chargeback', 'estorn', 'cancel', 'recus', 'refused', 'expired', 'expirad'];
 
@@ -106,7 +110,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Find the Supabase auth user by email (small user base — paginate if this grows).
     const { data: usersPage } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const users = usersPage?.users || [];
-    const user = users.find((u: { email?: string }) => u.email?.toLowerCase() === email.toLowerCase());
+    let user = users.find((u: { email?: string }) => u.email?.toLowerCase() === email.toLowerCase());
+
+    // No account yet for this email: if the payment was approved, provision
+    // one on the spot with the default password so access is instant — the
+    // buyer never had to sign up separately before paying.
+    if (!user && isApproved) {
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
+        email,
+        password: DEFAULT_PASSWORD,
+        email_confirm: true,
+      });
+      if (createError) {
+        await admin
+          .from('webhook_events')
+          .update({ processed: false, processing_note: `falha ao criar conta para ${email}: ${createError.message}` })
+          .eq('id', eventRow?.id);
+        return res.status(200).json({ received: true, error: true });
+      }
+      user = created.user;
+    }
 
     if (!user) {
       await admin
