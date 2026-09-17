@@ -1,10 +1,12 @@
 import { GoogleGenAI } from '@google/genai';
 
-export function getGeminiClient(): GoogleGenAI {
-  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+// A chave do usuário (settings.custom_gemini_key) tem prioridade sobre a do
+// servidor, para que cada conta possa usar sua própria cota do Gemini.
+export function getGeminiClient(userApiKey?: string | null): GoogleGenAI {
+  const apiKey = (userApiKey || process.env.GEMINI_API_KEY || '').trim();
 
   if (!apiKey) {
-    throw new Error('GEMINI_API_KEY não configurada no servidor.');
+    throw new Error('Nenhuma chave do Gemini configurada. Adicione a sua em Configurações.');
   }
 
   return new GoogleGenAI({

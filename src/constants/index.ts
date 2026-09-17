@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   onboardingCompleted: false,
   userName: 'Consultor Digital',
   agencyName: 'Minha Agência Digital',
+  customGeminiKey: '',
 };
 
 export const COLOR_PRESETS = [

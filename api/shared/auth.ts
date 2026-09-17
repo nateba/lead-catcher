@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY as string;
 
-interface AuthedRequest {
+export interface AuthedRequest {
   userId: string;
   supabase: SupabaseClient;
 }
@@ -85,4 +85,17 @@ export async function requireActiveSubscription(
   }
 
   return auth;
+}
+
+// Lê a chave pessoal do Gemini do usuário autenticado. O client já vem com o RLS
+// aplicado à sessão dele, então só a própria linha de settings é visível.
+export async function getUserGeminiKey(auth: AuthedRequest): Promise<string | null> {
+  const { data } = await auth.supabase
+    .from('settings')
+    .select('custom_gemini_key')
+    .eq('user_id', auth.userId)
+    .maybeSingle();
+
+  const key = (data?.custom_gemini_key || '').trim();
+  return key || null;
 }

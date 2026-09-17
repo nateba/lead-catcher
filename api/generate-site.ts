@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireActiveSubscription } from './shared/auth';
+import { requireActiveSubscription, getUserGeminiKey } from './shared/auth';
 import { getGeminiClient, generateWithGeminiFallback, generateSmartFallbackSite } from './shared/gemini';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const client = getGeminiClient();
+    const client = getGeminiClient(await getUserGeminiKey(auth));
 
     const prompt = `Você é um redator publicitário e estrategista de marca sênior especializado em pequenos negócios locais brasileiros.
 

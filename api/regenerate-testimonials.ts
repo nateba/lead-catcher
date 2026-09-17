@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireActiveSubscription } from './shared/auth';
+import { requireActiveSubscription, getUserGeminiKey } from './shared/auth';
 import { getGeminiClient, generateWithGeminiFallback } from './shared/gemini';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { name, category, city } = req.body || {};
 
   try {
-    const client = getGeminiClient();
+    const client = getGeminiClient(await getUserGeminiKey(auth));
 
     const prompt = `Gere exatamente 3 novos depoimentos para a empresa "${name}" (${category}) em ${city || 'Brasil'}.
 Retorne APENAS um JSON no formato:

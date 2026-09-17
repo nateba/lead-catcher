@@ -221,6 +221,7 @@ export interface AppSettings {
   onboardingCompleted: boolean;
   userName: string;
   agencyName: string;
+  customGeminiKey: string;
 }
 
 export type ViewMode = 'grid' | 'list' | 'map';

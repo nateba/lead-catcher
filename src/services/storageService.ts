@@ -523,6 +523,7 @@ function rowToSettings(row: any): AppSettings {
     onboardingCompleted: row?.onboarding_completed ?? DEFAULT_SETTINGS.onboardingCompleted,
     userName: row?.user_name ?? DEFAULT_SETTINGS.userName,
     agencyName: row?.agency_name ?? DEFAULT_SETTINGS.agencyName,
+    customGeminiKey: row?.custom_gemini_key ?? DEFAULT_SETTINGS.customGeminiKey,
   };
 }
 
@@ -549,6 +550,7 @@ export async function saveSettings(settings: Partial<AppSettings>): Promise<AppS
       onboarding_completed: updated.onboardingCompleted,
       user_name: updated.userName,
       agency_name: updated.agencyName,
+      custom_gemini_key: updated.customGeminiKey,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' }

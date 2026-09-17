@@ -7,6 +7,9 @@ import {
   Building,
   RotateCcw,
   Lock,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { AppSettings, SavedLead } from '../types';
 import { saveSettings, clearAllLocalData, exportLeadsToCsv } from '../services/storageService';
@@ -33,6 +36,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [overpassServer, setOverpassServer] = useState(settings.overpassServer || 'auto');
   const [agencyName, setAgencyName] = useState(settings.agencyName || 'Minha Agência Digital');
   const [userName, setUserName] = useState(settings.userName || 'Consultor Digital');
+  const [customGeminiKey, setCustomGeminiKey] = useState(settings.customGeminiKey || '');
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
@@ -42,6 +47,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       overpassServer,
       agencyName: agencyName.trim(),
       userName: userName.trim(),
+      customGeminiKey: customGeminiKey.trim(),
     });
     onUpdateSettings(updated);
     showToast('Configurações salvas com sucesso!');
@@ -179,6 +185,76 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onChange={(e) => setUserName(e.target.value)}
               className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* 3.2. Personal Gemini API Key */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <KeyRound className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Sua Chave do Gemini (opcional)
+            </h3>
+            <p className="text-xs text-slate-400">
+              Use sua própria cota de IA para gerar os textos dos sites
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="gemini-key-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+            Chave da API
+          </label>
+          <div className="relative">
+            <input
+              id="gemini-key-input"
+              type={showGeminiKey ? 'text' : 'password'}
+              value={customGeminiKey}
+              onChange={(e) => setCustomGeminiKey(e.target.value)}
+              placeholder="AIza..."
+              autoComplete="off"
+              spellCheck={false}
+              className="w-full pl-3.5 pr-10 py-2 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200"
+            />
+            <button
+              type="button"
+              onClick={() => setShowGeminiKey((v) => !v)}
+              aria-label={showGeminiKey ? 'Ocultar chave' : 'Mostrar chave'}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              {showGeminiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+            Pegue a sua em{' '}
+            <a
+              href="https://aistudio.google.com/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-500 hover:text-indigo-400 underline underline-offset-2"
+            >
+              Google AI Studio
+            </a>
+            . Deixando em branco, a geração usa a chave do servidor — e, se não houver
+            nenhuma, cai no modelo de textos prontos por categoria.
+          </p>
+
+          <div className="mt-3 flex items-center gap-2 text-[11px]">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                settings.customGeminiKey ? 'bg-emerald-500' : 'bg-slate-400'
+              }`}
+            />
+            <span className="text-slate-500 dark:text-slate-400">
+              {settings.customGeminiKey
+                ? 'Chave pessoal salva e em uso nas gerações.'
+                : 'Nenhuma chave pessoal salva.'}
+            </span>
           </div>
         </div>
       </div>
