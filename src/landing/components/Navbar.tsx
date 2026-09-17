@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCheckout }) => {
         {/* Action CTA */}
         <div className="hidden sm:flex items-center gap-3">
           <a
-            href="/app"
+            href="/app/"
             id="navbar-login-link"
             className="text-[13.5px] font-medium text-[#98949E] hover:text-[#F4F2F7] px-3.5 py-1.5 rounded-full transition-all duration-200 hover:bg-[#0D0813]/60"
           >
@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCheckout }) => {
           </div>
           <div className="pt-2 border-t border-[#150C1F] space-y-2">
             <a
-              href="/app"
+              href="/app/"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center py-2.5 rounded-xl text-sm font-medium text-[#98949E] hover:text-[#F4F2F7] hover:bg-[#0D0813] transition-colors"
             >
