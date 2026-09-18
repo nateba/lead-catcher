@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   MapPin,
@@ -22,8 +22,20 @@ import {
 import { SearchFilters, RecentSearch } from '../types';
 import { BRAZIL_STATES, BUSINESS_CATEGORIES } from '../data/categories';
 import { NICHE_DEFINITIONS, findNicheByTerm } from '../data/nicheMappings';
+import { getNicheIcon } from '../data/nicheIcons';
 import { geocodeCity } from '../services/osmService';
 import { getRecentSearches, saveRecentSearch } from '../services/storageService';
+
+// Labels carry qualifiers ("Salão de Beleza & Estética") that hurt a plain-text
+// Google search, so keep only the leading name.
+function toSearchTerm(label: string): string {
+  return label.split(/[&(]/)[0].trim();
+}
+
+function buildGoogleMapsUrl(niche: string, city: string, stateName: string, country: string): string {
+  const query = `${niche} empresas que não tem site em ${city}, ${stateName}, ${country}`;
+  return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+}
 
 interface SearchFormProps {
   onSearch: (filters: SearchFilters) => void;
@@ -42,6 +54,8 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 }) => {
   const [state, setState] = useState('SP');
   const [city, setCity] = useState('São Paulo');
+  const [country, setCountry] = useState('Brasil');
+  const [searchMode, setSearchMode] = useState<'auto' | 'manual'>('auto');
   const [categoryKey, setCategoryKey] = useState('barbearia');
   const [customTag, setCustomTag] = useState('');
   const [radiusKm, setRadiusKm] = useState(5);
@@ -63,10 +77,8 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   const [cityValid, setCityValid] = useState<boolean | null>(null);
   const [cityValidationMessage, setCityValidationMessage] = useState('');
 
-  // Category combobox search & synonyms
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  // Niche picker search (matches labels and synonyms)
   const [categorySearch, setCategorySearch] = useState('');
-  const comboboxRef = useRef<HTMLDivElement>(null);
 
   // Load recent searches on mount
   useEffect(() => {
@@ -77,16 +89,21 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     NICHE_DEFINITIONS.find((c) => c.key === categoryKey) ||
     BUSINESS_CATEGORIES.find((c) => c.key === categoryKey);
 
-  // Close combobox when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (comboboxRef.current && !comboboxRef.current.contains(e.target as Node)) {
-        setIsCategoryOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const stateName = BRAZIL_STATES.find((s) => s.uf === state)?.name || state;
+  const mapsQuery = `${toSearchTerm(selectedCategory?.label || '')} empresas que não tem site em ${
+    city.trim() || '...'
+  }, ${stateName}, ${country}`;
+
+  const handleOpenGoogleMaps = () => {
+    const url = buildGoogleMapsUrl(
+      toSearchTerm(selectedCategory?.label || ''),
+      city.trim(),
+      stateName,
+      country
+    );
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
 
   // Validate city on blur
   const validateCityName = async () => {
@@ -277,85 +294,84 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             </div>
           </div>
 
-          {/* Row 2: Business Category Combobox */}
-          <div className="relative" ref={comboboxRef}>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Nicho / Categoria de Negócio <span className="text-rose-500">*</span>
-            </label>
-            <button
-              id="category-combobox-button"
-              type="button"
-              onClick={() => !isLoading && setIsCategoryOpen(!isCategoryOpen)}
-              disabled={isLoading}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-left"
-            >
-              <div className="flex items-center gap-2.5 truncate">
-                <span className="w-2 h-2 rounded-full bg-indigo-500" />
-                <span className="font-semibold">{selectedCategory?.label || 'Selecione um nicho'}</span>
-                {selectedCategory && 'primaryTag' in selectedCategory && selectedCategory.key !== 'personalizado' && (
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-200/70 dark:bg-slate-700/60 text-slate-600 dark:text-slate-400 font-mono hidden sm:inline-block">
-                    {selectedCategory.primaryTag}
-                  </span>
-                )}
+          {/* Row 2: Business Category Picker */}
+          <div>
+            <div className="flex items-end justify-between mb-1.5 gap-3 flex-wrap">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Nicho / Categoria de Negócio <span className="text-rose-500">*</span>
+              </label>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {filteredCategories.length} nicho{filteredCategories.length === 1 ? '' : 's'}
+              </span>
+            </div>
+
+            <div className="relative mb-2.5">
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                id="category-search-input"
+                type="text"
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
+                disabled={isLoading}
+                placeholder="Buscar nicho... (ex: barbearia, pizzaria, advocacia)"
+                className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+              />
+            </div>
+
+            {filteredCategories.length === 0 ? (
+              <div className="p-5 text-center text-xs text-slate-400 border border-dashed border-slate-700 rounded-xl">
+                Nenhum nicho encontrado para "{categorySearch}". Limpe a busca e escolha "Personalizado" para usar sua própria tag OSM.
               </div>
-              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
-            </button>
-
-            {/* Dropdown with inner search & synonym support */}
-            {isCategoryOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 p-2 overflow-hidden animate-fadeIn">
-                <div className="p-1 mb-1">
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      placeholder="Pesquisar por nicho ou sinônimo (ex: hvac, borracharia, clareamento, pilates)..."
-                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      autoFocus
-                    />
-                  </div>
-                </div>
-
-                <div className="max-h-60 overflow-y-auto space-y-0.5 pr-1">
-                  {filteredCategories.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-400">
-                      Nenhuma categoria encontrada para "{categorySearch}". Selecione "Personalizado" abaixo para usar sua própria tag OSM.
-                    </div>
-                  ) : (
-                    filteredCategories.map((cat) => (
-                      <button
-                        key={cat.key}
-                        type="button"
-                        onClick={() => {
-                          setCategoryKey(cat.key);
-                          setIsCategoryOpen(false);
-                          setCategorySearch('');
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors text-left ${
-                          categoryKey === cat.key
-                            ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold'
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-[13px]">{cat.label}</span>
-                          {cat.description && (
-                            <span className="text-[11px] text-slate-400 dark:text-slate-500">{cat.description}</span>
-                          )}
-                        </div>
-                        {cat.primaryTag !== 'custom' && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-slate-500 shrink-0 ml-2 hidden sm:inline-block">
-                            {cat.primaryTag}
-                          </span>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[19rem] overflow-y-auto pr-1">
+                {filteredCategories.map((cat) => {
+                  const Icon = getNicheIcon(cat.iconName);
+                  const isSelected = categoryKey === cat.key;
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      title={cat.description}
+                      onClick={() => setCategoryKey(cat.key)}
+                      disabled={isLoading}
+                      className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-left transition-all disabled:opacity-50 ${
+                        isSelected
+                          ? 'bg-[#1C0D2A] border-[#8126C2] text-white shadow-[0_0_18px_rgba(129,38,194,0.45)]'
+                          : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-[#8126C2]/60 hover:text-white'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#B65AF0]' : 'text-slate-400'}`} />
+                      <span className="text-[12px] font-semibold leading-tight">{cat.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
+          </div>
+
+          {/* Search mode: live Overpass query vs. a manual Google Maps lookup */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Modo</span>
+            <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 gap-1">
+              {[
+                { id: 'auto' as const, label: 'API Inteligente (Auto)' },
+                { id: 'manual' as const, label: 'Pesquisa Manual (Maps)' },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => setSearchMode(m.id)}
+                  disabled={isLoading}
+                  className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50 ${
+                    searchMode === m.id
+                      ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white shadow-[0_0_14px_rgba(129,38,194,0.4)]'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Custom OSM Tag field if 'personalizado' */}
@@ -378,6 +394,68 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             </div>
           )}
 
+          {/* Manual mode: hand the search off to Google Maps instead of Overpass */}
+          {searchMode === 'manual' && (
+            <div className="p-4 rounded-xl border border-[#25123A] bg-[#0d0813]/60 space-y-3.5 animate-fadeIn">
+              <div className="flex items-center gap-2 flex-wrap">
+                {(() => {
+                  const Icon = getNicheIcon(selectedCategory?.iconName);
+                  return <Icon className="w-4 h-4 text-[#B65AF0]" />;
+                })()}
+                <span className="text-sm font-bold text-white">{selectedCategory?.label}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#8126C2]/20 text-[#B65AF0] border border-[#8126C2]/40">
+                  Selecionado
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                <div className="sm:col-span-4">
+                  <label htmlFor="country-select" className="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+                    País
+                  </label>
+                  <select
+                    id="country-select"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
+                  >
+                    {['Brasil', 'Portugal'].map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-8">
+                  <p className="text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+                    Busca que será aberta
+                  </p>
+                  <p className="px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[12px] text-slate-300 truncate" title={mapsQuery}>
+                    {mapsQuery}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenGoogleMaps}
+                disabled={!city.trim() || !state}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wide bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white hover:brightness-110 shadow-[0_0_24px_rgba(129,38,194,0.35)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <MapPin className="w-4 h-4" />
+                Abrir no Google Maps
+              </button>
+
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Abre o Google Maps numa nova aba com a busca acima. Use quando o nicho tiver
+                pouca cobertura no OpenStreetMap — os resultados não entram no CRM automaticamente.
+              </p>
+            </div>
+          )}
+
+          {searchMode === 'auto' && (
+          <>
           {/* Row 3: Radius & Result Limit */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 pt-1">
             {/* Radius Options */}
@@ -622,6 +700,8 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 <span className={loadingStep >= 4 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>4. Qualificar</span>
               </div>
             </div>
+          )}
+          </>
           )}
         </form>
       </div>
