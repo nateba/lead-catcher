@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Play, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import { HeroMockup } from './HeroMockup';
 import { LeadItem } from '../types';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 interface HeroSectionProps {
   onStartClick: () => void;
@@ -23,7 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Eyebrow / Feature Pill */}
-        <div className="flex justify-center mb-6 sm:mb-8">
+        <ScrollReveal direction="up" delay={0} className="flex justify-center mb-6 sm:mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B0712]/90 border border-[#25123A] shadow-[0_0_20px_rgba(90,20,48,0.3)]">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8126C2] opacity-75" />
@@ -36,10 +37,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               v2.4
             </span>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Hero Headline */}
         <div className="text-center max-w-4xl mx-auto space-y-6">
+          <ScrollReveal direction="up" delay={150}>
           <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[76px] font-extrabold text-[#F4F2F7] leading-[1.04] tracking-[-0.035em]">
             Encontre clientes.{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F4F2F7] via-[#B65AF0] to-[#8126C2]">
@@ -47,14 +49,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>{' '}
             Feche o negócio.
           </h1>
+          </ScrollReveal>
 
           {/* Subheadline - concise, crisp */}
+          <ScrollReveal direction="up" delay={300}>
           <p className="max-w-2xl mx-auto text-base sm:text-lg md:text-xl text-[#98949E] font-normal leading-relaxed">
             Encontre negócios reais pelo OpenStreetMap, identifique oportunidades e gere sites profissionais com IA para apresentar e vender.
           </p>
+          </ScrollReveal>
 
           {/* CTAs */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
+          <ScrollReveal direction="up" delay={450} className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
             <a
               href="#planos"
               onClick={(e) => {
@@ -80,10 +85,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Play className="w-3.5 h-3.5 text-[#8126C2] fill-[#8126C2]" />
               Ver como funciona
             </a>
-          </div>
+          </ScrollReveal>
 
           {/* Trust Micro-Indicators */}
-          <div className="pt-3 flex items-center justify-center gap-6 text-xs text-[#817D8A]">
+          <ScrollReveal direction="up" delay={600} className="pt-3 flex items-center justify-center gap-6 text-xs text-[#817D8A]">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#8126C2]" />
               Sem necessidade de código
@@ -93,17 +98,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Zap className="w-3.5 h-3.5 text-[#B65AF0]" />
               Sites gerados em segundos
             </span>
-          </div>
+          </ScrollReveal>
 
         </div>
 
         {/* Floating Product UI Stage */}
-        <div className="mt-14 sm:mt-18 lg:mt-22 relative">
+        <ScrollReveal direction="up" delay={300} duration={800} className="mt-14 sm:mt-18 lg:mt-22 relative">
           <HeroMockup 
             onSelectLead={onSelectLead}
             onGenerateSite={onGenerateSite}
           />
-        </div>
+        </ScrollReveal>
 
       </div>
     </section>

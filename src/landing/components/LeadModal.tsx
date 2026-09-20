@@ -18,7 +18,7 @@ export const LeadModal: React.FC<LeadModalProps> = ({
   if (!isOpen || !lead) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl rounded-2xl md:rounded-3xl bg-[#040308] border border-[#25123A] p-6 sm:p-8 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(194,38,85,0.3)] text-[#F4F2F7]">
         
         {/* Close */}

@@ -9,6 +9,7 @@ import {
   Globe2,
   Users2
 } from 'lucide-react';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 export const HowItWorksSection: React.FC = () => {
   const steps = [
@@ -58,7 +59,7 @@ export const HowItWorksSection: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Minimalist Editorial Headline */}
-        <div className="text-center max-w-2xl mx-auto mb-16 sm:mb-20 space-y-4">
+        <ScrollReveal direction="up" className="text-center max-w-2xl mx-auto mb-16 sm:mb-20 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0D0717] border border-[#25103A] text-xs font-semibold text-[#B65AF0]">
             Processo Simples
           </div>
@@ -68,10 +69,10 @@ export const HowItWorksSection: React.FC = () => {
           <p className="text-base text-[#98949E] max-w-md mx-auto">
             Um fluxo fluido e direto para você fechar contratos todos os dias.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Cinematic Pipeline Visual Nodes: HypeLeads → Lead → Site → Cliente */}
-        <div className="mb-16 sm:mb-20 max-w-3xl mx-auto">
+        <ScrollReveal direction="up" delay={150} className="mb-16 sm:mb-20 max-w-3xl mx-auto">
           <div className="relative rounded-2xl bg-[#050309]/90 border border-[#160C26] p-4 sm:p-6 backdrop-blur-xl shadow-[0_15px_50px_rgba(0,0,0,0.8)]">
             <div className="flex items-center justify-between gap-2 sm:gap-4 overflow-x-auto py-1">
               {pipeline.map((item, idx) => {
@@ -103,16 +104,16 @@ export const HowItWorksSection: React.FC = () => {
               })}
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* 4 Steps Rhythm Grid (Clean, generous spacing, large typography) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {steps.map((item) => {
+          {steps.map((item, index) => {
             const Icon = item.icon;
             return (
+              <ScrollReveal key={item.step} direction="left" delay={index * 150} className="h-full">
               <div
-                key={item.step}
-                className="group relative rounded-2xl bg-[#05040A]/80 border border-[#130B20] hover:border-[#36145A]/70 p-6 sm:p-7 transition-all duration-300 flex flex-col justify-between hover:shadow-[0_10px_35px_rgba(90,20,48,0.2)]"
+                className="h-full group relative rounded-2xl bg-[#05040A]/80 border border-[#130B20] hover:border-[#36145A]/70 p-6 sm:p-7 transition-all duration-300 flex flex-col justify-between hover:shadow-[0_10px_35px_rgba(90,20,48,0.2)]"
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
@@ -137,6 +138,7 @@ export const HowItWorksSection: React.FC = () => {
                   {item.highlight}
                 </div>
               </div>
+              </ScrollReveal>
             );
           })}
         </div>

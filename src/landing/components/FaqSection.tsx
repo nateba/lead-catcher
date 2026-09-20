@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 import { FAQ_ITEMS } from '../data/mockData';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 export const FaqSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -18,7 +19,7 @@ export const FaqSection: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20 space-y-4">
+        <ScrollReveal direction="up" className="text-center max-w-2xl mx-auto mb-14 sm:mb-20 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0d0718] border border-[#23103A] text-xs font-semibold text-[#B65AF0]">
             <HelpCircle className="w-3.5 h-3.5" />
             Perguntas Frequentes
@@ -31,15 +32,16 @@ export const FaqSection: React.FC = () => {
           <p className="text-base text-[#98949E]">
             Tudo o que você precisa saber sobre a HypeLeads de forma direta e transparente.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Clean Minimalist Accordion */}
         <div className="space-y-3">
           {FAQ_ITEMS.map((item, index) => {
             const isOpen = openIndex === index;
             return (
+              // Long list, so the stagger is capped instead of index * 150.
+              <ScrollReveal key={item.question} direction="up" delay={Math.min(index * 90, 450)}>
               <div
-                key={item.question}
                 className={`rounded-2xl transition-all duration-300 border ${
                   isOpen 
                     ? 'bg-[#080510] border-[#36145A]/80 shadow-[0_10px_30px_rgba(0,0,0,0.6)]' 
@@ -67,6 +69,7 @@ export const FaqSection: React.FC = () => {
                   </div>
                 )}
               </div>
+              </ScrollReveal>
             );
           })}
         </div>

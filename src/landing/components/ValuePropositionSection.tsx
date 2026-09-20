@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Search, Sparkles, Check, Zap } from 'lucide-react';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 interface ValuePropositionProps {
   onStartClick: () => void;
@@ -15,7 +16,7 @@ export const ValuePropositionSection: React.FC<ValuePropositionProps> = ({ onSta
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Core Formula Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-20 space-y-4">
+        <ScrollReveal direction="up" className="text-center max-w-3xl mx-auto mb-14 sm:mb-20 space-y-4">
           <span className="text-xs font-bold uppercase tracking-widest text-[#B65AF0]">
             A Proposta Central
           </span>
@@ -23,13 +24,14 @@ export const ValuePropositionSection: React.FC<ValuePropositionProps> = ({ onSta
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#F4F2F7] leading-[1.08] tracking-[-0.035em]">
             Duas ferramentas essenciais unidas em um único lugar.
           </h2>
-        </div>
+        </ScrollReveal>
 
         {/* The Two Pillars Visual Juxtaposition */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           
           {/* Pillar 1 */}
-          <div className="relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#090610] to-[#050307] border border-[#1B0E2B] p-8 sm:p-10 flex flex-col justify-between shadow-2xl">
+          <ScrollReveal direction="up" delay={150} className="h-full">
+          <div className="h-full relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#090610] to-[#050307] border border-[#1B0E2B] p-8 sm:p-10 flex flex-col justify-between shadow-2xl">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-[#160C23] border border-[#301448] flex items-center justify-center text-[#B65AF0]">
                 <Search className="w-6 h-6" />
@@ -59,9 +61,11 @@ export const ValuePropositionSection: React.FC<ValuePropositionProps> = ({ onSta
               </div>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Pillar 2 */}
-          <div className="relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#0C0715] to-[#040308] border border-[#27123E] p-8 sm:p-10 flex flex-col justify-between shadow-[0_20px_60px_rgba(90,20,48,0.25)]">
+          <ScrollReveal direction="up" delay={300} className="h-full">
+          <div className="h-full relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#0C0715] to-[#040308] border border-[#27123E] p-8 sm:p-10 flex flex-col justify-between shadow-[0_20px_60px_rgba(90,20,48,0.25)]">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#8126C2] to-[#36145A] flex items-center justify-center text-white shadow-[0_0_20px_rgba(194,38,85,0.4)]">
                 <Sparkles className="w-6 h-6" />
@@ -95,10 +99,12 @@ export const ValuePropositionSection: React.FC<ValuePropositionProps> = ({ onSta
               </div>
             </div>
           </div>
+          </ScrollReveal>
 
         </div>
 
         {/* Central Closing Conversion Card */}
+        <ScrollReveal direction="up" delay={450}>
         <div className="mt-10 max-w-4xl mx-auto text-center p-6 sm:p-8 rounded-2xl bg-[#06040B]/80 border border-[#150C24] flex flex-col sm:flex-row items-center justify-between gap-5">
           <div className="text-left space-y-1">
             <div className="text-base font-bold text-[#F4F2F7] font-display flex items-center gap-2">
@@ -118,6 +124,7 @@ export const ValuePropositionSection: React.FC<ValuePropositionProps> = ({ onSta
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
+        </ScrollReveal>
 
       </div>
     </section>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ScrollReveal } from '../../components/ScrollReveal';
 import { 
   Sparkles, 
   MapPin, 
@@ -46,7 +47,7 @@ export const LeadIntelligenceSection: React.FC<LeadIntelligenceSectionProps> = (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           
           {/* Left Column: Bold Editorial Presentation */}
-          <div className="lg:col-span-5 space-y-6">
+          <ScrollReveal direction="left" className="lg:col-span-5 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0F0A1A] border border-[#27113E] text-xs font-semibold text-[#B65AF0]">
               <Sparkles className="w-3.5 h-3.5" />
               Lead Intelligence
@@ -92,10 +93,10 @@ export const LeadIntelligenceSection: React.FC<LeadIntelligenceSectionProps> = (
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Right Column: Deep Product Showcase (OdontoPrime Card) */}
-          <div className="lg:col-span-7">
+          <ScrollReveal direction="right" delay={200} duration={800} className="lg:col-span-7">
             <div className="relative">
               
               {/* Backlight glow */}
@@ -249,7 +250,7 @@ export const LeadIntelligenceSection: React.FC<LeadIntelligenceSectionProps> = (
 
               </div>
             </div>
-          </div>
+          </ScrollReveal>
 
         </div>
 

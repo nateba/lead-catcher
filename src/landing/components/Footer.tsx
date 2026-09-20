@@ -1,6 +1,7 @@
 import React from 'react';
 import { HypeLeadsLogo } from './BrandLogo';
 import { ArrowUpRight, ShieldCheck, Heart } from 'lucide-react';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 interface FooterProps {
   onStartClick: () => void;
@@ -19,7 +20,7 @@ export const Footer: React.FC<FooterProps> = ({ onStartClick }) => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-[#0F091A]">
           
           {/* Brand and Slogan */}
-          <div className="space-y-3 max-w-sm">
+          <ScrollReveal direction="up" className="space-y-3 max-w-sm">
             <HypeLeadsLogo size="lg" />
             <p className="text-xs text-[#817D8A] font-medium leading-relaxed">
               Encontre clientes. Crie o site. Feche o negócio.
@@ -28,10 +29,10 @@ export const Footer: React.FC<FooterProps> = ({ onStartClick }) => {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Operação Brasil · 100% em nuvem
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Quick Links */}
-          <div className="flex flex-wrap items-center gap-6 text-xs text-[#98949E]">
+          <ScrollReveal direction="up" delay={150} className="flex flex-wrap items-center gap-6 text-xs text-[#98949E]">
             <a href="#produto" className="hover:text-white transition-colors">Produto</a>
             <a href="#inteligencia" className="hover:text-white transition-colors">Inteligência</a>
             <a href="#como-funciona" className="hover:text-white transition-colors">Como Funciona</a>
@@ -48,12 +49,12 @@ export const Footer: React.FC<FooterProps> = ({ onStartClick }) => {
               Começar agora
               <ArrowUpRight className="w-3 h-3" />
             </a>
-          </div>
+          </ScrollReveal>
 
         </div>
 
         {/* Bottom copyright and legal note */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#817D8A]">
+        <ScrollReveal direction="up" delay={300} className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#817D8A]">
           <p>© {new Date().getFullYear()} HypeLeads. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4">
             <span className="hover:text-[#F4F2F7] transition-colors cursor-pointer">Termos de Uso</span>
@@ -65,7 +66,7 @@ export const Footer: React.FC<FooterProps> = ({ onStartClick }) => {
               Pagamento Seguro
             </span>
           </div>
-        </div>
+        </ScrollReveal>
 
       </div>
     </footer>

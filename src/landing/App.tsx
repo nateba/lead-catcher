@@ -11,6 +11,7 @@ import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
 import { LeadModal } from './components/LeadModal';
 import { LeadItem } from './types';
+import { ProgressiveBlur } from '../components/ProgressiveBlur';
 
 export default function App() {
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
@@ -79,6 +80,9 @@ export default function App() {
 
       {/* Footer Oficial */}
       <Footer onStartClick={() => handleOpenCheckout('vitalicio')} />
+
+      {/* Bottom edge blur: content dissolves as it scrolls off instead of being cut. */}
+      <ProgressiveBlur />
 
       {/* Modal de Interatividade: detalhe de lead de exemplo */}
       <LeadModal

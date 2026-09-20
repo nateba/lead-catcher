@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check, Sparkles, Shield, ArrowRight, Zap, Flame } from 'lucide-react';
 import { PRICING_PLANS } from '../data/mockData';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 interface PricingSectionProps {
   onSelectPlan: (planId: string) => void;
@@ -22,7 +23,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20 space-y-4">
+        <ScrollReveal direction="up" className="text-center max-w-3xl mx-auto mb-16 sm:mb-20 space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#0d0718] border border-[#23103A] text-xs font-semibold text-[#B65AF0]">
             <Sparkles className="w-3.5 h-3.5" />
             Planos e Acesso
@@ -35,13 +36,14 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           <p className="text-base text-[#98949E] max-w-md mx-auto">
             Sem pegadinhas. Comece a prospectar e gerar sites profissionais hoje mesmo.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Pricing Cards Grid (Rhythm: Mensal clean, Vitalício dominating with special border & glow) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl mx-auto">
           
           {/* Card 1: Plano Mensal (5 columns) */}
-          <div className="lg:col-span-5 rounded-2xl md:rounded-3xl bg-[#050409]/90 border border-[#140C22] p-7 sm:p-9 flex flex-col justify-between transition-all hover:border-[#231238]">
+          <ScrollReveal direction="up" delay={200} className="lg:col-span-5">
+          <div className="h-full rounded-2xl md:rounded-3xl bg-[#050409]/90 border border-[#140C22] p-7 sm:p-9 flex flex-col justify-between transition-all hover:border-[#231238]">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-[#F4F2F7] font-display">
@@ -93,9 +95,11 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
               </button>
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Card 2: Plano Acesso Pra Sempre (7 columns - Dominant Presence) */}
-          <div className="lg:col-span-7 relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#0b0716] via-[#07040E] to-[#050307] border-2 border-[#8126C2]/60 p-8 sm:p-10 flex flex-col justify-between shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(194,38,85,0.25)]">
+          <ScrollReveal direction="up" delay={350} duration={800} className="lg:col-span-7">
+          <div className="h-full relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#0b0716] via-[#07040E] to-[#050307] border-2 border-[#8126C2]/60 p-8 sm:p-10 flex flex-col justify-between shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(194,38,85,0.25)]">
             
             {/* Top Badge (🔥 RESTAM APENAS X ACESSOS NESTE LOTE) */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap">
@@ -194,6 +198,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
             </div>
 
           </div>
+          </ScrollReveal>
 
         </div>
 

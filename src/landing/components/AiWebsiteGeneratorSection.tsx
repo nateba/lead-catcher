@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ScrollReveal } from '../../components/ScrollReveal';
 import { 
   Sparkles, 
   Smartphone, 
@@ -38,7 +39,7 @@ export const AiWebsiteGeneratorSection: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Editorial Header with generous negative space */}
-        <div className="max-w-3xl mb-14 sm:mb-20">
+        <ScrollReveal direction="up" className="max-w-3xl mb-14 sm:mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0F0A1A] border border-[#27113E] text-xs font-semibold text-[#B65AF0] mb-5">
             <Sparkles className="w-3.5 h-3.5" />
             Criação Automatizada com IA
@@ -51,9 +52,10 @@ export const AiWebsiteGeneratorSection: React.FC = () => {
           <p className="text-base sm:text-lg text-[#98949E] mt-5 leading-relaxed max-w-2xl">
             Em vez de tentar vender uma promessa abstrata, você envia o link do site da própria empresa já criado, com a identidade visual impecável e pronto para publicar.
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Studio Workspace Showcase (Inverted layout: Studio on Left/Full, with integrated properties) */}
+        <ScrollReveal direction="up" delay={200} duration={800}>
         <div className="relative rounded-2xl md:rounded-[28px] bg-[#040307]/95 backdrop-blur-2xl border border-[#1B0E2B] p-2 md:p-4 shadow-[0_30px_90px_rgba(0,0,0,0.9),0_0_60px_-15px_rgba(90,20,48,0.3)]">
           
           {/* Top Bar of the Studio Editor */}
@@ -337,6 +339,7 @@ export const AiWebsiteGeneratorSection: React.FC = () => {
           </div>
 
         </div>
+        </ScrollReveal>
 
       </div>
     </section>
