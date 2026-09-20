@@ -63,7 +63,7 @@ export const TestimonialsTab: React.FC<TestimonialsTabProps> = ({
       {/* Notice */}
       <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
-        <p className="text-[11px] leading-relaxed">
+        <p className="text-[13px] leading-relaxed">
           <strong>Transparência:</strong> Estes depoimentos são exemplos demonstrativos para a proposta visual e estão devidamente identificados na página.
         </p>
       </div>
@@ -104,7 +104,7 @@ export const TestimonialsTab: React.FC<TestimonialsTabProps> = ({
               className="w-full px-2.5 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-indigo-500 italic"
             />
             <div className="flex items-center gap-2">
-              <label className="text-[11px] font-semibold text-slate-500">Autor:</label>
+              <label className="text-[13px] font-semibold text-slate-500">Autor:</label>
               <input
                 type="text"
                 value={dep.autor}

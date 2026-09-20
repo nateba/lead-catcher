@@ -29,7 +29,7 @@ export const CodeTab: React.FC<CodeTabProps> = ({
       </div>
 
       <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-        <pre className="p-3 text-[11px] font-mono bg-slate-900 text-slate-200 max-h-[480px] overflow-y-auto leading-relaxed">
+        <pre className="p-3 text-[13px] font-mono bg-slate-900 text-slate-200 max-h-[480px] overflow-y-auto leading-relaxed">
           {standaloneHtml}
         </pre>
       </div>

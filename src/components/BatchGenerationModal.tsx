@@ -175,7 +175,7 @@ export const BatchGenerationModal: React.FC<BatchGenerationModalProps> = ({
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className="w-7 h-7 rounded-lg text-white font-bold text-[10px] flex items-center justify-center shrink-0"
+                  className="w-7 h-7 rounded-lg text-white font-bold text-[12px] flex items-center justify-center shrink-0"
                   style={{ backgroundColor: item.lead.avatarBg || '#4f46e5' }}
                 >
                   {item.lead.initials}
@@ -184,7 +184,7 @@ export const BatchGenerationModal: React.FC<BatchGenerationModalProps> = ({
                   <p className="font-bold text-slate-900 dark:text-white truncate">
                     {item.lead.name}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[12px] text-slate-400">
                     {item.lead.categoryLabel} • {item.lead.city}
                   </p>
                 </div>
@@ -193,23 +193,23 @@ export const BatchGenerationModal: React.FC<BatchGenerationModalProps> = ({
               {/* Status indicator & actions */}
               <div className="flex items-center gap-2 shrink-0">
                 {item.status === 'pending' && (
-                  <span className="text-[11px] text-slate-400 font-medium">Aguardando</span>
+                  <span className="text-[13px] text-slate-400 font-medium">Aguardando</span>
                 )}
                 {item.status === 'generating' && (
-                  <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1.5">
+                  <span className="text-[13px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1.5">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     Gerando IA...
                   </span>
                 )}
                 {item.status === 'error' && (
-                  <span className="text-[11px] text-rose-500 font-bold flex items-center gap-1">
+                  <span className="text-[13px] text-rose-500 font-bold flex items-center gap-1">
                     <AlertCircle className="w-3.5 h-3.5" />
                     Erro
                   </span>
                 )}
                 {item.status === 'success' && item.siteData && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-emerald-500 font-bold flex items-center gap-1 text-[11px] mr-1">
+                    <span className="text-emerald-500 font-bold flex items-center gap-1 text-[13px] mr-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       Pronto
                     </span>

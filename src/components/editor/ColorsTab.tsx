@@ -32,11 +32,11 @@ export const ColorsTab: React.FC<ColorsTabProps> = ({
           <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             Estilo Visual do Layout
           </h4>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+          <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
             {STYLES_REGISTRY[currentStyle]?.label || 'Modern'}
           </span>
         </div>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400">
           Altera tipografia, composição, cartões e contraste do site gerado.
         </p>
 
@@ -61,12 +61,12 @@ export const ColorsTab: React.FC<ColorsTabProps> = ({
                     {item.label}
                   </span>
                   {isSelected && (
-                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400">
                       ✓ Ativo
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-tight">
                   {item.description}
                 </p>
               </button>
@@ -104,7 +104,7 @@ export const ColorsTab: React.FC<ColorsTabProps> = ({
                   style={{ backgroundColor: preset.secondary }}
                 />
               </div>
-              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+              <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 truncate">
                 {preset.name}
               </span>
             </button>
@@ -123,7 +123,7 @@ export const ColorsTab: React.FC<ColorsTabProps> = ({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
               Cor Primária (Header, Botões, Destaques)
             </label>
-            <span className="text-[11px] font-mono text-slate-400">{colors.primaria}</span>
+            <span className="text-[13px] font-mono text-slate-400">{colors.primaria}</span>
           </div>
           <input
             type="color"
@@ -138,7 +138,7 @@ export const ColorsTab: React.FC<ColorsTabProps> = ({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
               Cor Secundária (Gradientes, Ícones)
             </label>
-            <span className="text-[11px] font-mono text-slate-400">{colors.secundaria}</span>
+            <span className="text-[13px] font-mono text-slate-400">{colors.secundaria}</span>
           </div>
           <input
             type="color"

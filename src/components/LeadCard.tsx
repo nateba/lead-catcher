@@ -88,7 +88,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
             </div>
 
             <div className="min-w-0">
-              <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
+              <span className="inline-block text-[13px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 truncate max-w-[130px]">
                 {lead.categoryLabel}
               </span>
             </div>
@@ -97,7 +97,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
           {/* Lead Score & Website Status Badges */}
           <div className="flex flex-col items-end gap-1 shrink-0">
             <span
-              className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${getQualityBadge()}`}
+              className={`inline-flex items-center gap-1 text-[12px] font-extrabold px-2 py-0.5 rounded-full border ${getQualityBadge()}`}
               title={`Lead Score: ${lead.leadScore}/100`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -106,16 +106,16 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
             <div className="flex items-center gap-1.5">
               {!lead.hasWebsite ? (
-                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-900/60">
+                <span className="text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.5 rounded border border-rose-200/60 dark:border-rose-900/60">
                   Site não identificado
                 </span>
               ) : (
-                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                   Já possui site
                 </span>
               )}
 
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+              <span className="inline-flex items-center gap-0.5 text-[12px] font-semibold text-slate-400 dark:text-slate-500">
                 <Navigation className="w-2.5 h-2.5" />
                 {lead.distanceFormatted || `${lead.distanceKm} km`}
               </span>
@@ -150,7 +150,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
                 {lead.phone}
               </a>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Sem telefone registrado</span>
+              <span className="text-slate-400 dark:text-slate-500 text-[13px] italic">Sem telefone registrado</span>
             )}
           </div>
 
@@ -159,7 +159,7 @@ export const LeadCard: React.FC<LeadCardProps> = ({
               href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 transition-colors"
+              className="inline-flex items-center gap-1 text-[13px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 transition-colors"
               title="Abrir WhatsApp"
             >
               <MessageCircle className="w-3 h-3" />

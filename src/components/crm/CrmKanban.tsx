@@ -72,7 +72,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                     {col.label}
                   </span>
                 </div>
-                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs">
+                <span className="text-[13px] font-extrabold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs">
                   {columnLeads.length}
                 </span>
               </div>
@@ -80,7 +80,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
               {/* Cards Container */}
               <div className="flex-1 space-y-3 overflow-y-auto pr-0.5">
                 {columnLeads.length === 0 ? (
-                  <div className="h-32 flex flex-col items-center justify-center text-[11px] text-slate-400 italic text-center p-3 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                  <div className="h-32 flex flex-col items-center justify-center text-[13px] text-slate-400 italic text-center p-3 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
                     <span>Nenhum lead nesta etapa</span>
                   </div>
                 ) : (
@@ -117,7 +117,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                             className="flex items-center gap-2 min-w-0 cursor-pointer flex-1"
                           >
                             <div
-                              className="w-7 h-7 rounded-lg text-white font-extrabold text-[10px] flex items-center justify-center shrink-0"
+                              className="w-7 h-7 rounded-lg text-white font-extrabold text-[12px] flex items-center justify-center shrink-0"
                               style={{ backgroundColor: item.lead.avatarBg || '#4f46e5' }}
                             >
                               {item.lead.initials || 'EM'}
@@ -126,7 +126,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                               <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                 {item.lead.name}
                               </h4>
-                              <span className="text-[10px] text-slate-400 truncate block">
+                              <span className="text-[12px] text-slate-400 truncate block">
                                 {item.lead.categoryLabel} • {item.lead.city}
                               </span>
                             </div>
@@ -143,7 +143,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                         </div>
 
                         {/* Score & Badges */}
-                        <div className="flex items-center justify-between gap-1 flex-wrap text-[10px]">
+                        <div className="flex items-center justify-between gap-1 flex-wrap text-[12px]">
                           <span
                             className="inline-flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                             title={`Lead Score: ${item.lead.leadScore || 0}/100`}
@@ -165,7 +165,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
 
                         {/* Deal Value if FECHADO */}
                         {item.status === 'FECHADO' && (
-                          <div className="flex items-center gap-1 text-[11px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                          <div className="flex items-center gap-1 text-[13px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
                             <DollarSign className="w-3 h-3" />
                             <span>R$ {(item.dealValue || 1500).toLocaleString('pt-BR')}</span>
                           </div>
@@ -173,7 +173,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
 
                         {/* Lost Reason if PERDIDO */}
                         {(item.status === 'PERDIDO' || item.status === 'RECUSADO') && item.lostReason && (
-                          <div className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
+                          <div className="text-[12px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-1.5 py-0.5 rounded">
                             Motivo: {item.lostReason}
                           </div>
                         )}
@@ -181,7 +181,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                         {/* Follow-up alert if scheduled */}
                         {item.followUp && !item.followUp.completed && (
                           <div
-                            className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                            className={`flex items-center gap-1 text-[12px] font-bold px-1.5 py-0.5 rounded border ${
                               isFollowUpOverdue
                                 ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-900/60'
                                 : 'text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
@@ -197,14 +197,14 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
 
                         {/* Stale Badge if >= 5 days without contact */}
                         {isStale && !isFollowUpOverdue && (
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60">
+                          <div className="flex items-center gap-1 text-[12px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60">
                             <Clock className="w-2.5 h-2.5" />
                             <span>há {daysSince} dias sem contato</span>
                           </div>
                         )}
 
                         {/* Notes Preview / Inline edit */}
-                        <div className="text-[10px] bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-lg text-slate-600 dark:text-slate-400">
+                        <div className="text-[12px] bg-slate-50 dark:bg-slate-800/60 p-1.5 rounded-lg text-slate-600 dark:text-slate-400">
                           {editingNotesId === item.id ? (
                             <div className="space-y-1">
                               <textarea
@@ -212,21 +212,21 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                                 value={noteText}
                                 onChange={(e) => setNoteText(e.target.value)}
                                 placeholder="Anotações do contato..."
-                                className="w-full p-1 text-[10px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200"
+                                className="w-full p-1 text-[12px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded text-slate-800 dark:text-slate-200"
                                 autoFocus
                               />
                               <div className="flex justify-end gap-1">
                                 <button
                                   type="button"
                                   onClick={() => setEditingNotesId(null)}
-                                  className="px-1.5 py-0.5 text-[9px] text-slate-500"
+                                  className="px-1.5 py-0.5 text-[11px] text-slate-500"
                                 >
                                   Cancelar
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => onSaveNotes(item.id)}
-                                  className="px-1.5 py-0.5 text-[9px] bg-indigo-600 text-white rounded font-bold"
+                                  className="px-1.5 py-0.5 text-[11px] bg-indigo-600 text-white rounded font-bold"
                                 >
                                   Salvar
                                 </button>
@@ -253,7 +253,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                         <select
                           value={item.status}
                           onChange={(e) => onStatusChange(item.id, e.target.value as LeadStatus)}
-                          className="w-full px-2 py-1 text-[10px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                          className="w-full px-2 py-1 text-[12px] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
                         >
                           <option value="NOVO">1. Novo Lead</option>
                           <option value="SITE_GERADO">2. Site Gerado</option>
@@ -267,7 +267,7 @@ export const CrmKanban: React.FC<CrmKanbanProps> = ({
                         </select>
 
                         {/* Card Action Buttons */}
-                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1 text-[10px]">
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1 text-[12px]">
                           {item.siteData ? (
                             <button
                               type="button"

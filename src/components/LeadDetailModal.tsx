@@ -108,16 +108,16 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                     {lead.categoryLabel}
                   </span>
                   {!lead.hasWebsite ? (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                    <span className="text-[12px] px-2 py-0.5 rounded-full font-bold bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
                       Site não identificado
                     </span>
                   ) : (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    <span className="text-[12px] px-2 py-0.5 rounded-full font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                       Já possui website
                     </span>
                   )}
                   {alreadySaved && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[12px] px-2 py-0.5 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                       Salvo no CRM
                     </span>
                   )}
@@ -154,7 +154,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             </div>
 
             {showScoreDetails && lead.scoreBreakdown && (
-              <div className="mt-2.5 pt-2.5 border-t border-current/20 grid grid-cols-2 gap-1.5 text-[11px] font-medium">
+              <div className="mt-2.5 pt-2.5 border-t border-current/20 grid grid-cols-2 gap-1.5 text-[13px] font-medium">
                 <div>• Sem site cadastrado: <strong>+{lead.scoreBreakdown.noWebsiteScore} pts</strong></div>
                 <div>• Telefone disponível: <strong>+{lead.scoreBreakdown.phoneScore} pts</strong></div>
                 <div>• WhatsApp válido: <strong>+{lead.scoreBreakdown.whatsappScore} pts</strong></div>
@@ -186,7 +186,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
             <p className="text-slate-800 dark:text-slate-200 font-medium text-xs sm:text-sm">
               {lead.address || <span className="italic text-slate-400">Não informado no OpenStreetMap</span>}
             </p>
-            <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
+            <div className="flex items-center gap-2 mt-2 text-[13px] text-slate-500">
               <Navigation className="w-3 h-3" />
               <span>Aproximadamente {lead.distanceFormatted || `${lead.distanceKm} km`} do centro de busca</span>
             </div>

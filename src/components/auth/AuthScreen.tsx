@@ -44,7 +44,7 @@ export const AuthScreen: React.FC = () => {
         {/* Brand */}
         <div className="mb-6">
           <HypeLeadsLogo size="md" />
-          <p className="text-[11px] font-medium text-slate-500 mt-1.5">
+          <p className="text-[13px] font-medium text-slate-500 mt-1.5">
             {mode === 'signin' ? 'Entre na sua conta' : 'Crie sua conta'}
           </p>
         </div>

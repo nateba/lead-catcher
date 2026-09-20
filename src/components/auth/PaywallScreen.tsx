@@ -42,7 +42,7 @@ export const PaywallScreen: React.FC = () => {
           </a>
         </div>
 
-        <div className="mt-5 flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+        <div className="mt-5 flex items-center justify-center gap-1.5 text-[13px] text-slate-400 dark:text-slate-500">
           <Check className="w-3.5 h-3.5 text-emerald-500" />
           Acesso liberado automaticamente após a confirmação do pagamento
         </div>

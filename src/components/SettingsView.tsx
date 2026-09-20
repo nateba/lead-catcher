@@ -230,13 +230,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           </div>
 
-          <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+          <p className="text-[13px] text-slate-400 mt-2 leading-relaxed">
             Pegue a sua em{' '}
             <a
               href="https://aistudio.google.com/apikey"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-500 hover:text-indigo-400 underline underline-offset-2"
+              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
             >
               Google AI Studio
             </a>
@@ -244,7 +244,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             nenhuma, cai no modelo de textos prontos por categoria.
           </p>
 
-          <div className="mt-3 flex items-center gap-2 text-[11px]">
+          <div className="mt-3 flex items-center gap-2 text-[13px]">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
                 settings.customGeminiKey ? 'bg-emerald-500' : 'bg-slate-400'

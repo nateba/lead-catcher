@@ -65,7 +65,7 @@ export const CrmTable: React.FC<CrmTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+            <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[13px]">
               <th className="py-3.5 px-3 w-10 text-center">
                 <button
                   type="button"
@@ -198,7 +198,7 @@ export const CrmTable: React.FC<CrmTableProps> = ({
                         className="flex items-center gap-2.5 cursor-pointer group"
                       >
                         <div
-                          className="w-7 h-7 rounded-lg text-white font-extrabold text-[10px] flex items-center justify-center shrink-0"
+                          className="w-7 h-7 rounded-lg text-white font-extrabold text-[12px] flex items-center justify-center shrink-0"
                           style={{ backgroundColor: item.lead.avatarBg || '#4f46e5' }}
                         >
                           {item.lead.initials || 'EM'}
@@ -208,12 +208,12 @@ export const CrmTable: React.FC<CrmTableProps> = ({
                             {item.lead.name}
                           </h4>
                           {item.lead.phone ? (
-                            <p className="text-[11px] text-slate-400 flex items-center gap-1 font-mono">
+                            <p className="text-[13px] text-slate-400 flex items-center gap-1 font-mono">
                               <Phone className="w-2.5 h-2.5 text-emerald-500" />
                               {item.lead.phone}
                             </p>
                           ) : (
-                            <span className="text-[10px] text-slate-400 italic">Sem telefone</span>
+                            <span className="text-[12px] text-slate-400 italic">Sem telefone</span>
                           )}
                         </div>
                       </div>
@@ -221,7 +221,7 @@ export const CrmTable: React.FC<CrmTableProps> = ({
 
                     {/* Category */}
                     <td className="py-3.5 px-3">
-                      <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px]">
+                      <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px]">
                         {item.lead.categoryLabel}
                       </span>
                     </td>
@@ -233,7 +233,7 @@ export const CrmTable: React.FC<CrmTableProps> = ({
 
                     {/* Lead Score */}
                     <td className="py-3.5 px-3">
-                      <span className="inline-flex items-center gap-1 font-bold text-[11px] text-slate-700 dark:text-slate-300">
+                      <span className="inline-flex items-center gap-1 font-bold text-[13px] text-slate-700 dark:text-slate-300">
                         <Target className="w-3 h-3 text-indigo-500" />
                         {item.lead.leadScore || 0} pts
                       </span>
@@ -243,7 +243,7 @@ export const CrmTable: React.FC<CrmTableProps> = ({
                     <td className="py-3.5 px-3">
                       {item.followUp && !item.followUp.completed ? (
                         <div
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-bold border ${
                             isFollowUpOverdue
                               ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/60'
                               : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60'
@@ -253,12 +253,12 @@ export const CrmTable: React.FC<CrmTableProps> = ({
                           <span>{item.followUp.date}</span>
                         </div>
                       ) : isStale ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60">
                           <Clock className="w-2.5 h-2.5" />
                           <span>há {daysSince} dias</span>
                         </span>
                       ) : (
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-[13px] text-slate-400">
                           {daysSince === 0 ? 'Hoje' : `há ${daysSince} dia(s)`}
                         </span>
                       )}

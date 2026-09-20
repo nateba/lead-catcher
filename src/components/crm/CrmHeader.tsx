@@ -319,7 +319,7 @@ export const CrmHeader: React.FC<CrmHeaderProps> = ({
           )}
         </div>
 
-        <div className="text-slate-400 text-[11px] shrink-0">
+        <div className="text-slate-400 text-[13px] shrink-0">
           Exibindo <strong className="text-slate-700 dark:text-slate-200">{filteredCount}</strong> de {savedLeads.length} leads
         </div>
       </div>

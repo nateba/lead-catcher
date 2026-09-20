@@ -213,7 +213,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             {/* Status Dropdown in Header */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">Status:</span>
+              <span className="text-[13px] font-semibold text-slate-400 hidden sm:inline">Status:</span>
               <select
                 value={leadItem.status}
                 onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
@@ -307,7 +307,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
               {/* Quick Pipeline Status Card with specialized actions */}
               <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  <span className="text-[13px] font-bold text-slate-400 uppercase tracking-wider block">
                     Etapa Atual no Funil
                   </span>
                   <div className="flex items-center gap-2 mt-1">
@@ -329,7 +329,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                   <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-xs">
                     <DollarSign className="w-4 h-4 text-emerald-600" />
                     <div>
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 block">
+                      <span className="text-[12px] font-bold text-emerald-700 dark:text-emerald-300 block">
                         Valor Fechado
                       </span>
                       <span className="font-extrabold text-emerald-800 dark:text-emerald-200 text-sm">
@@ -341,14 +341,14 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
 
                 {leadItem.status === 'PERDIDO' && (
                   <div className="bg-rose-50 dark:bg-rose-950/60 p-2.5 rounded-xl border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300">
-                    <span className="text-[10px] font-bold block">Motivo da Perda</span>
+                    <span className="text-[12px] font-bold block">Motivo da Perda</span>
                     <span className="font-semibold">{leadItem.lostReason || 'Não informado'}</span>
                   </div>
                 )}
 
                 {leadItem.status === 'REUNIAO_MARCADA' && leadItem.meetingInfo && (
                   <div className="bg-purple-50 dark:bg-purple-950/60 p-2.5 rounded-xl border border-purple-200 dark:border-purple-800 text-xs text-purple-700 dark:text-purple-300">
-                    <span className="text-[10px] font-bold block flex items-center gap-1">
+                    <span className="text-[12px] font-bold block flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Reunião Agendada
                     </span>
                     <span className="font-bold">
@@ -498,7 +498,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                   <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
                     {lead.address || 'Endereço não cadastrado'}
                   </p>
-                  <div className="flex items-center gap-3 pt-1 text-[11px]">
+                  <div className="flex items-center gap-3 pt-1 text-[13px]">
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                         `${lead.name} ${lead.city} ${lead.state}`
@@ -542,7 +542,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={handleClearFollowUp}
-                      className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors"
+                      className="text-[13px] text-slate-400 hover:text-rose-500 transition-colors"
                     >
                       Remover lembrete
                     </button>
@@ -654,7 +654,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      <span className="text-[12px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                         Landing Page Criada
                       </span>
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white mt-0.5">
@@ -687,7 +687,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                     {leadItem.siteData.subheadline}
                   </p>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px] pt-1">
                     <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                       <span className="text-slate-400 block">Estilo Visual</span>
                       <strong className="text-indigo-600 dark:text-indigo-400 font-bold">
@@ -780,7 +780,7 @@ export const CrmLeadDetailModal: React.FC<CrmLeadDetailModalProps> = ({
                           <p className="font-medium text-slate-800 dark:text-slate-200">
                             {act.description}
                           </p>
-                          <span className="text-[10px] text-slate-400 block mt-1">
+                          <span className="text-[12px] text-slate-400 block mt-1">
                             {new Date(act.timestamp).toLocaleDateString('pt-BR')} às{' '}
                             {new Date(act.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                           </span>

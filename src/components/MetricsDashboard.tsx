@@ -30,6 +30,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { SavedLead } from '../types';
+import { ScrollReveal } from './ScrollReveal';
 
 interface MetricsDashboardProps {
   savedLeads: SavedLead[];
@@ -204,7 +205,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
       </div>
 
       {/* Top 4 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <ScrollReveal direction="up" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 1. Total de Leads Encontrados / Salvos */}
         <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
@@ -264,10 +265,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             </h3>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Main Charts: Funnel & Categories */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <ScrollReveal direction="up" delay={150} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Funnel Bar Chart */}
         <div className="lg:col-span-7 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div>
@@ -278,21 +279,33 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             <p className="text-xs text-slate-400">Etapas desde a descoberta no radar até o fechamento do contrato</p>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.funnelData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="stage" stroke="#94a3b8" fontSize={9} interval={0} />
-                <YAxis stroke="#94a3b8" fontSize={11} allowDecimals={false} />
+              <BarChart
+                data={stats.funnelData}
+                layout="vertical"
+                margin={{ top: 4, right: 16, left: 4, bottom: 4 }}
+              >
+                <XAxis type="number" stroke="#98949e" fontSize={12} allowDecimals={false} />
+                <YAxis
+                  type="category"
+                  dataKey="stage"
+                  stroke="#98949e"
+                  fontSize={12}
+                  width={118}
+                  interval={0}
+                  tickLine={false}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
-                    borderColor: '#1e293b',
+                    backgroundColor: '#130c23',
+                    borderColor: '#25123A',
                     borderRadius: '8px',
                     color: '#fff',
-                    fontSize: '12px',
+                    fontSize: '13px',
                   }}
                 />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
                   {stats.funnelData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
@@ -331,10 +344,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0f172a',
+                      backgroundColor: '#130c23',
                       borderRadius: '8px',
                       color: '#fff',
-                      fontSize: '12px',
+                      fontSize: '13px',
                     }}
                   />
                 </PieChart>
@@ -344,10 +357,10 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             )}
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Row 2: City Ranking & Time Series Area Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <ScrollReveal direction="up" delay={150} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* City Ranking */}
         <div className="lg:col-span-6 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div>
@@ -370,7 +383,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
                   <div key={item.city} className="space-y-1">
                     <div className="flex items-center justify-between text-xs font-semibold">
                       <span className="text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] flex items-center justify-center font-bold">
+                        <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[12px] flex items-center justify-center font-bold">
                           {idx + 1}
                         </span>
                         {item.city}
@@ -405,16 +418,16 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={stats.timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
-                <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
-                <YAxis stroke="#94a3b8" fontSize={11} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a1540" opacity={0.2} />
+                <XAxis dataKey="date" stroke="#98949e" fontSize={12} />
+                <YAxis stroke="#98949e" fontSize={12} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
-                    borderColor: '#1e293b',
+                    backgroundColor: '#130c23',
+                    borderColor: '#25123A',
                     borderRadius: '8px',
                     color: '#fff',
-                    fontSize: '12px',
+                    fontSize: '13px',
                   }}
                 />
                 <Area
@@ -429,7 +442,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* ROI & Price Simulator Card */}
       <div className="p-6 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white rounded-2xl shadow-xl space-y-5">
@@ -464,7 +477,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
             onChange={(e) => setAvgTicketPrice(Number(e.target.value))}
             className="w-full h-2 bg-indigo-950 rounded-lg appearance-none cursor-pointer accent-indigo-400"
           />
-          <div className="flex justify-between text-[11px] text-indigo-300">
+          <div className="flex justify-between text-[13px] text-indigo-300">
             <span>R$ 500 (Básico)</span>
             <span>R$ 1.500 (Padrão de Mercado)</span>
             <span>R$ 4.000 (Site + Gestão Mensal)</span>
@@ -473,19 +486,19 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-white/10">
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-[11px] text-indigo-200">Faturamento Já Realizado ({stats.closed} vendas)</p>
+            <p className="text-[13px] text-indigo-200">Faturamento Já Realizado ({stats.closed} vendas)</p>
             <p className="text-xl font-extrabold text-emerald-400 mt-0.5">
               R$ {stats.totalRevenue.toLocaleString('pt-BR')}
             </p>
           </div>
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-[11px] text-indigo-200">Potencial Estimado em Pipeline</p>
+            <p className="text-[13px] text-indigo-200">Potencial Estimado em Pipeline</p>
             <p className="text-xl font-extrabold text-amber-300 mt-0.5">
               R$ {Math.round(stats.pipelinePotential).toLocaleString('pt-BR')}
             </p>
           </div>
           <div className="p-3 bg-white/5 rounded-xl">
-            <p className="text-[11px] text-indigo-200">Custo Extra por Busca ou Site</p>
+            <p className="text-[13px] text-indigo-200">Custo Extra por Busca ou Site</p>
             <p className="text-xl font-extrabold text-white mt-0.5">
               R$ 0,00 (incluso no plano)
             </p>
