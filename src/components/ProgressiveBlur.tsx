@@ -7,11 +7,6 @@ interface ProgressiveBlurProps {
   /** Height of the blurred strip. */
   height?: number;
   zIndex?: number;
-  /**
-   * Left offset, e.g. `"16rem"` to clear a fixed sidebar. Anything to the left
-   * of this stays sharp — use it so the strip never covers real controls.
-   */
-  left?: number | string;
 }
 
 /**
@@ -28,15 +23,14 @@ interface ProgressiveBlurProps {
 export const ProgressiveBlur: React.FC<ProgressiveBlurProps> = ({
   height = 200,
   zIndex = 999,
-  left = 0,
 }) => (
   <div
     aria-hidden="true"
     style={{
       position: 'fixed',
       bottom: 0,
-      left,
-      right: 0,
+      left: 0,
+      width: '100%',
       height,
       zIndex,
       pointerEvents: 'none',

@@ -41,7 +41,6 @@ import {
   DEFAULT_SETTINGS,
 } from './services/storageService';
 import { Loader2 } from 'lucide-react';
-import { ProgressiveBlur } from './components/ProgressiveBlur';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -410,13 +409,6 @@ function AppContent() {
             {activeTab === 'admin' && isAdmin && <AdminPanel />}
           </div>
         </main>
-      </div>
-
-      {/* Bottom edge blur over the content column only. Desktop-only because on
-          mobile it would sit over the fixed bottom nav, and offset by the w-64
-          sidebar so it never covers the account controls in its footer. */}
-      <div className="hidden md:block">
-        <ProgressiveBlur height={140} left="16rem" />
       </div>
 
       {/* MODALS */}
