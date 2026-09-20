@@ -225,5 +225,14 @@ export interface AppSettings {
 }
 
 export type ViewMode = 'grid' | 'list' | 'map';
-export type ActiveTab = 'search' | 'crm' | 'metrics' | 'settings' | 'admin';
+export type ActiveTab =
+  | 'search'
+  | 'crm'
+  | 'analise'
+  | 'portfolio'
+  | 'presente'
+  | 'dashboard'
+  | 'metrics'
+  | 'settings'
+  | 'admin';
 export type DevicePreviewMode = 'desktop' | 'tablet' | 'mobile';

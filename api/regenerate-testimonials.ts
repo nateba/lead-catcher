@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireActiveSubscription, getUserGeminiKey } from './shared/auth';
-import { getGeminiClient, generateWithGeminiFallback } from './shared/gemini';
+import { requireActiveSubscription, getUserGeminiKey } from './shared/auth.js';
+import { getGeminiClient, generateWithGeminiFallback } from './shared/gemini.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

@@ -14,6 +14,7 @@ import {
   Building2,
   XCircle,
   Clock,
+  ExternalLink,
   Globe,
   RotateCcw,
   X,
@@ -23,7 +24,13 @@ import { SearchFilters, RecentSearch } from '../types';
 import { BRAZIL_STATES, BUSINESS_CATEGORIES } from '../data/categories';
 import { NICHE_DEFINITIONS, findNicheByTerm } from '../data/nicheMappings';
 import { getNicheIcon } from '../data/nicheIcons';
-import { geocodeCity } from '../services/osmService';
+import {
+  getCountries,
+  getStates,
+  getCities,
+  getCitiesByUf,
+  type CountryOption,
+} from '../services/locationService';
 import { getRecentSearches, saveRecentSearch } from '../services/storageService';
 
 // Labels carry qualifiers ("Salão de Beleza & Estética") that hurt a plain-text
@@ -32,9 +39,22 @@ function toSearchTerm(label: string): string {
   return label.split(/[&(]/)[0].trim();
 }
 
-function buildGoogleMapsUrl(niche: string, city: string, stateName: string, country: string): string {
-  const query = `${niche} empresas que não tem site em ${city}, ${stateName}, ${country}`;
+// Cities are omitted when a country/state has no list, so the search still
+// works at state level instead of producing a dangling comma.
+function buildMapsQuery(niche: string, city: string, stateName: string, country: string): string {
+  const place = [city, stateName, country].filter(Boolean).join(', ');
+  return `${niche} empresas que não tem site em ${place}`;
+}
+
+function buildGoogleMapsUrl(query: string): string {
   return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
+}
+
+// Keyless embed (`output=embed`). It needs no Maps API key, but it is an
+// undocumented endpoint — if Google ever drops it, the "open in a new tab"
+// button below the map still works.
+function buildGoogleMapsEmbedUrl(query: string): string {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 }
 
 interface SearchFormProps {
@@ -54,8 +74,19 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 }) => {
   const [state, setState] = useState('SP');
   const [city, setCity] = useState('São Paulo');
-  const [country, setCountry] = useState('Brasil');
   const [searchMode, setSearchMode] = useState<'auto' | 'manual'>('auto');
+
+  // Manual mode keeps its own location: it is worldwide and uses full state
+  // names, while the automatic search is Brazil-only and keyed by UF code.
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [manualCountry, setManualCountry] = useState('Brazil');
+  const [manualStates, setManualStates] = useState<string[]>([]);
+  const [manualState, setManualState] = useState('São Paulo');
+  const [manualCities, setManualCities] = useState<string[]>([]);
+  const [manualCity, setManualCity] = useState('São Paulo');
+  const [isLoadingManualStates, setIsLoadingManualStates] = useState(false);
+  const [isLoadingManualCities, setIsLoadingManualCities] = useState(false);
+  const [manualError, setManualError] = useState('');
   const [categoryKey, setCategoryKey] = useState('barbearia');
   const [customTag, setCustomTag] = useState('');
   const [radiusKm, setRadiusKm] = useState(5);
@@ -72,10 +103,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   // Recent Searches
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
 
-  // City validation
-  const [isValidatingCity, setIsValidatingCity] = useState(false);
-  const [cityValid, setCityValid] = useState<boolean | null>(null);
-  const [cityValidationMessage, setCityValidationMessage] = useState('');
+  // Municipality list for the selected state (IBGE)
+  const [cities, setCities] = useState<string[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [citiesError, setCitiesError] = useState('');
 
   // Niche picker search (matches labels and synonyms)
   const [categorySearch, setCategorySearch] = useState('');
@@ -89,42 +120,112 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     NICHE_DEFINITIONS.find((c) => c.key === categoryKey) ||
     BUSINESS_CATEGORIES.find((c) => c.key === categoryKey);
 
-  const stateName = BRAZIL_STATES.find((s) => s.uf === state)?.name || state;
-  const mapsQuery = `${toSearchTerm(selectedCategory?.label || '')} empresas que não tem site em ${
-    city.trim() || '...'
-  }, ${stateName}, ${country}`;
+  const countryLabel =
+    countries.find((c) => c.value === manualCountry)?.label || manualCountry;
+  const mapsQuery = buildMapsQuery(
+    toSearchTerm(selectedCategory?.label || ''),
+    manualCity,
+    manualState,
+    countryLabel
+  );
+  const mapsEmbedUrl = buildGoogleMapsEmbedUrl(mapsQuery);
 
   const handleOpenGoogleMaps = () => {
-    const url = buildGoogleMapsUrl(
-      toSearchTerm(selectedCategory?.label || ''),
-      city.trim(),
-      stateName,
-      country
-    );
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(buildGoogleMapsUrl(mapsQuery), '_blank', 'noopener,noreferrer');
   };
 
 
-  // Validate city on blur
-  const validateCityName = async () => {
-    if (!city.trim() || !state) return;
-    setIsValidatingCity(true);
-    setCityValidationMessage('');
-    try {
-      const geo = await geocodeCity(city, state);
-      if (geo) {
-        setCityValid(true);
-        setCityValidationMessage(`✓ ${geo.formattedLocation}`);
-      } else {
-        setCityValid(false);
-        setCityValidationMessage(`Não localizamos "${city}" no estado ${state}. Verifique a grafia.`);
-      }
-    } catch {
-      setCityValid(null);
-    } finally {
-      setIsValidatingCity(false);
+  // Countries for the manual mode picker (loaded once)
+  useEffect(() => {
+    getCountries()
+      .then(setCountries)
+      .catch(() => setManualError('Não foi possível carregar a lista de países.'));
+  }, []);
+
+  // States of the chosen country
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingManualStates(true);
+    setManualError('');
+
+    getStates(manualCountry)
+      .then((list) => {
+        if (cancelled) return;
+        setManualStates(list);
+        setManualState((current) => (list.includes(current) ? current : list[0] ?? ''));
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setManualStates([]);
+        setManualState('');
+        setManualError(err.message || 'Não foi possível carregar os estados.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingManualStates(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [manualCountry]);
+
+  // Cities of the chosen state
+  useEffect(() => {
+    if (!manualState) {
+      setManualCities([]);
+      setManualCity('');
+      return;
     }
-  };
+
+    let cancelled = false;
+    setIsLoadingManualCities(true);
+
+    getCities(manualCountry, manualState)
+      .then((list) => {
+        if (cancelled) return;
+        setManualCities(list);
+        setManualCity((current) => (list.includes(current) ? current : list[0] ?? ''));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // No city list for this state: fall back to searching the state itself.
+        setManualCities([]);
+        setManualCity('');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingManualCities(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [manualCountry, manualState]);
+
+  // Load the state's municipalities, keeping the selected city when it exists there
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingCities(true);
+    setCitiesError('');
+
+    getCitiesByUf(state)
+      .then((list) => {
+        if (cancelled) return;
+        setCities(list);
+        setCity((current) => (list.includes(current) ? current : list[0] ?? ''));
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setCities([]);
+        setCitiesError(err.message || 'Não foi possível carregar os municípios.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingCities(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state]);
 
   // Filter categories with synonym search
   const filteredCategories = NICHE_DEFINITIONS.filter((c) => {
@@ -178,8 +279,6 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     setCity(recent.city);
     setCategoryKey(recent.categoryKey);
     setRadiusKm(recent.radiusKm || 5);
-    setCityValid(null);
-    setCityValidationMessage('');
   };
 
   return (
@@ -201,7 +300,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           {/* Quick Recent Searches Chips */}
           {recentSearches.length > 0 && !isLoading && (
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 flex-wrap text-xs">
-              <span className="text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 text-[11px]">
+              <span className="text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1 text-[13px]">
                 <Clock className="w-3 h-3" />
                 Recentes:
               </span>
@@ -220,7 +319,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Row 1: State & City */}
+          {/* Row 1: State & City — the automatic search is Brazil-only, so the
+              manual mode brings its own worldwide country/state/city pickers. */}
+          {searchMode === 'auto' && (
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
             {/* State */}
             <div className="sm:col-span-4">
@@ -231,10 +332,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 <select
                   id="state-select"
                   value={state}
-                  onChange={(e) => {
-                    setState(e.target.value);
-                    setCityValid(null);
-                  }}
+                  onChange={(e) => setState(e.target.value)}
                   disabled={isLoading}
                   className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer"
                 >
@@ -249,50 +347,43 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
             {/* City */}
             <div className="sm:col-span-8">
-              <label htmlFor="city-input" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+              <label htmlFor="city-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                 <span>Cidade <span className="text-rose-500">*</span></span>
-                {isValidatingCity && (
-                  <span className="text-[11px] text-slate-400 font-normal flex items-center gap-1">
+                {isLoadingCities ? (
+                  <span className="text-[13px] text-slate-400 font-normal flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
-                    Validando via Nominatim...
+                    Carregando municípios...
                   </span>
+                ) : (
+                  cities.length > 0 && (
+                    <span className="text-[13px] text-slate-400 font-normal">
+                      {cities.length} municípios
+                    </span>
+                  )
                 )}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 z-10">
                   <MapPin className="w-4 h-4" />
                 </div>
-                <input
-                  id="city-input"
-                  type="text"
+                <select
+                  id="city-select"
                   value={city}
-                  onChange={(e) => {
-                    setCity(e.target.value);
-                    setCityValid(null);
-                  }}
-                  onBlur={validateCityName}
-                  placeholder="Ex: Curitiba, São Paulo, Florianópolis, Belo Horizonte..."
-                  disabled={isLoading}
-                  className={`w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800/60 border rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${
-                    cityValid === true
-                      ? 'border-emerald-500/50 dark:border-emerald-500/50'
-                      : cityValid === false
-                      ? 'border-rose-500/50 dark:border-rose-500/50'
-                      : 'border-slate-200 dark:border-slate-700'
-                  }`}
-                />
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                  {cityValid === true && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-                  {cityValid === false && <AlertCircle className="w-4 h-4 text-rose-500" />}
-                </div>
+                  onChange={(e) => setCity(e.target.value)}
+                  disabled={isLoading || isLoadingCities || cities.length === 0}
+                  className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer disabled:opacity-60"
+                >
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {cityValidationMessage && (
-                <p className={`text-[11px] mt-1 ${cityValid ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-rose-500'}`}>
-                  {cityValidationMessage}
-                </p>
-              )}
+              {citiesError && <p className="text-[13px] mt-1 text-rose-500">{citiesError}</p>}
             </div>
           </div>
+          )}
 
           {/* Row 2: Business Category Picker */}
           <div>
@@ -300,7 +391,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 Nicho / Categoria de Negócio <span className="text-rose-500">*</span>
               </label>
-              <span className="text-[11px] font-semibold text-slate-400">
+              <span className="text-[13px] font-semibold text-slate-400">
                 {filteredCategories.length} nicho{filteredCategories.length === 1 ? '' : 's'}
               </span>
             </div>
@@ -351,7 +442,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
           {/* Search mode: live Overpass query vs. a manual Google Maps lookup */}
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Modo</span>
+            <span className="text-[13px] font-bold uppercase tracking-wider text-slate-500">Modo</span>
             <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 gap-1">
               {[
                 { id: 'auto' as const, label: 'API Inteligente (Auto)' },
@@ -362,7 +453,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                   type="button"
                   onClick={() => setSearchMode(m.id)}
                   disabled={isLoading}
-                  className={`px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50 ${
+                  className={`px-3.5 py-1.5 rounded-lg text-[13px] font-bold transition-all disabled:opacity-50 ${
                     searchMode === m.id
                       ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white shadow-[0_0_14px_rgba(129,38,194,0.4)]'
                       : 'text-slate-500 dark:text-slate-400 hover:text-white'
@@ -388,7 +479,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 placeholder="Ex: shop=bicycle, leisure=bowling_alley, amenity=post_office"
                 className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-lg text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
-              <p className="text-[11px] text-indigo-600 dark:text-indigo-400">
+              <p className="text-[13px] text-indigo-600 dark:text-indigo-400">
                 Consulte as tags oficiais em <a href="https://wiki.openstreetmap.org/wiki/Map_features" target="_blank" rel="noreferrer" className="underline font-semibold">wiki.openstreetmap.org</a>
               </p>
             </div>
@@ -403,53 +494,129 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                   return <Icon className="w-4 h-4 text-[#B65AF0]" />;
                 })()}
                 <span className="text-sm font-bold text-white">{selectedCategory?.label}</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#8126C2]/20 text-[#B65AF0] border border-[#8126C2]/40">
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#8126C2]/20 text-[#B65AF0] border border-[#8126C2]/40">
                   Selecionado
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <div className="sm:col-span-4">
-                  <label htmlFor="country-select" className="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label htmlFor="country-select" className="block text-[13px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
                     País
                   </label>
                   <select
                     id="country-select"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
+                    value={manualCountry}
+                    onChange={(e) => {
+                      // Clear the state first: otherwise the cities effect fires
+                      // once with the previous country's state still selected.
+                      setManualState('');
+                      setManualCities([]);
+                      setManualCountry(e.target.value);
+                    }}
+                    disabled={countries.length === 0}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer disabled:opacity-60"
                   >
-                    {['Brasil', 'Portugal'].map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
+                    {countries.length === 0 ? (
+                      <option>Carregando...</option>
+                    ) : (
+                      countries.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
 
-                <div className="sm:col-span-8">
-                  <p className="text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
-                    Busca que será aberta
-                  </p>
-                  <p className="px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[12px] text-slate-300 truncate" title={mapsQuery}>
-                    {mapsQuery}
-                  </p>
+                <div>
+                  <label htmlFor="manual-state-select" className="block text-[13px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+                    Estado
+                  </label>
+                  <select
+                    id="manual-state-select"
+                    value={manualState}
+                    onChange={(e) => setManualState(e.target.value)}
+                    disabled={isLoadingManualStates || manualStates.length === 0}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer disabled:opacity-60"
+                  >
+                    {isLoadingManualStates ? (
+                      <option>Carregando...</option>
+                    ) : manualStates.length === 0 ? (
+                      <option value="">Sem estados</option>
+                    ) : (
+                      manualStates.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
+
+                <div>
+                  <label htmlFor="manual-city-select" className="block text-[13px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+                    Cidade
+                  </label>
+                  <select
+                    id="manual-city-select"
+                    value={manualCity}
+                    onChange={(e) => setManualCity(e.target.value)}
+                    disabled={isLoadingManualCities || manualCities.length === 0}
+                    className="w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer disabled:opacity-60"
+                  >
+                    {isLoadingManualCities ? (
+                      <option>Carregando...</option>
+                    ) : manualCities.length === 0 ? (
+                      <option value="">Busca no estado inteiro</option>
+                    ) : (
+                      manualCities.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              {manualError && <p className="text-[13px] text-rose-500">{manualError}</p>}
+
+              <div>
+                <p className="text-[13px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">
+                  Busca que será aberta
+                </p>
+                <p className="px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[12px] text-slate-300 truncate" title={mapsQuery}>
+                  {mapsQuery}
+                </p>
+              </div>
+
+              {/* Google's keyless embed — same results, without leaving the app */}
+              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900">
+                <iframe
+                  key={mapsEmbedUrl}
+                  title="Mapa da busca no Google Maps"
+                  src={mapsEmbedUrl}
+                  className="w-full h-[380px] border-0"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
 
               <button
                 type="button"
                 onClick={handleOpenGoogleMaps}
-                disabled={!city.trim() || !state}
+                disabled={!manualState && !manualCity}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wide bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white hover:brightness-110 shadow-[0_0_24px_rgba(129,38,194,0.35)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <MapPin className="w-4 h-4" />
-                Abrir no Google Maps
+                <ExternalLink className="w-4 h-4" />
+                Abrir no Google Maps (aba nova)
               </button>
 
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Abre o Google Maps numa nova aba com a busca acima. Use quando o nicho tiver
-                pouca cobertura no OpenStreetMap — os resultados não entram no CRM automaticamente.
+              <p className="text-[13px] text-slate-500 leading-relaxed">
+                O mapa acima é o próprio Google Maps. Abra em aba nova para ver a lista completa,
+                telefones e avaliações. Use quando o nicho tiver pouca cobertura no OpenStreetMap —
+                os resultados daqui não entram no CRM automaticamente.
               </p>
             </div>
           )}
@@ -528,7 +695,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
               <div className="mt-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3 animate-fadeIn">
                 {/* Website filter mode */}
                 <div className="space-y-1">
-                  <span className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <span className="block text-[13px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Status do Website:
                   </span>
                   <div className="grid grid-cols-3 gap-2">
@@ -570,7 +737,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
                 {/* Score filter */}
                 <div className="space-y-1">
-                  <span className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <span className="block text-[13px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                     Lead Score Mínimo:
                   </span>
                   <div className="grid grid-cols-4 gap-2">
@@ -693,7 +860,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-1 text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center">
+              <div className="grid grid-cols-4 gap-1 text-[12px] text-slate-500 dark:text-slate-400 mt-2 text-center">
                 <span className={loadingStep >= 1 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>1. Localizar</span>
                 <span className={loadingStep >= 2 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>2. Overpass</span>
                 <span className={loadingStep >= 3 ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''}>3. Normalizar</span>

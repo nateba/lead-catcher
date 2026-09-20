@@ -59,69 +59,29 @@ async function requireAdmin(
   return { userId: userData.user.id, supabase };
 }
 
-interface SubscriptionRow {
-  user_id: string;
-  plan: string;
-  status: string;
-  provider: string;
-  updated_at: string;
-}
-
+// Releases (or revokes) the bonus course for one user.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
   const auth = await requireAdmin(req, res);
   if (!auth) return;
 
+  const { userId, granted } = (req.body || {}) as { userId?: string; granted?: boolean };
+  if (!userId) {
+    return res.status(400).json({ error: 'userId é obrigatório.' });
+  }
+
   const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from('profiles')
+    .update({ gift_granted_at: granted ? new Date().toISOString() : null })
+    .eq('id', userId);
 
-  const { data: usersPage, error: usersError } = await admin.auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  });
-  if (usersError) {
-    return res.status(500).json({ error: usersError.message });
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
 
-  const { data: subscriptions, error: subsError } = await admin
-    .from('subscriptions')
-    .select('user_id, plan, status, provider, updated_at')
-    .order('updated_at', { ascending: false });
-  if (subsError) {
-    return res.status(500).json({ error: subsError.message });
-  }
-
-  // select('*') so a missing gift_granted_at column does not fail the query.
-  const { data: profiles } = await admin.from('profiles').select('*');
-  const giftById = new Map<string, string | null>((profiles || []).map((p: any) => [p.id, p.gift_granted_at ?? null]));
-  const adminIds = new Set((profiles || []).filter((p: any) => p.is_admin).map((p: any) => p.id));
-
-  const subsByUser = new Map<string, SubscriptionRow[]>();
-  for (const sub of (subscriptions || []) as SubscriptionRow[]) {
-    const list = subsByUser.get(sub.user_id) || [];
-    list.push(sub);
-    subsByUser.set(sub.user_id, list);
-  }
-
-  const users = (usersPage?.users || [])
-    .map((u) => {
-      const subs = subsByUser.get(u.id) || [];
-      const activeSub = subs.find((s) => s.status === 'active');
-      const latestSub = subs[0];
-      return {
-        id: u.id,
-        email: u.email || '',
-        createdAt: u.created_at,
-        isAdmin: adminIds.has(u.id),
-        giftGrantedAt: giftById.get(u.id) ?? null,
-        subscriptionStatus: activeSub?.status || latestSub?.status || null,
-        plan: activeSub?.plan || latestSub?.plan || null,
-        provider: activeSub?.provider || latestSub?.provider || null,
-      };
-    })
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-
-  return res.status(200).json({ users });
+  return res.status(200).json({ success: true });
 }

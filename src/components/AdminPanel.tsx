@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown, UserPlus } from 'lucide-react';
+import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown, UserPlus, FlaskConical, Gift } from 'lucide-react';
 import { authHeaders } from '../lib/apiAuth';
 import { useToast } from './Toast';
+import { isDemoEnabled, setDemoEnabled } from '../data/demoFlag';
 
 interface AdminUser {
   id: string;
@@ -11,6 +12,7 @@ interface AdminUser {
   subscriptionStatus: 'active' | 'canceled' | 'refunded' | null;
   plan: 'mensal' | 'vitalicio' | null;
   provider: string | null;
+  giftGrantedAt: string | null;
 }
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
@@ -24,6 +26,7 @@ export const AdminPanel: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [demoOn, setDemoOn] = useState(isDemoEnabled());
   const [newEmail, setNewEmail] = useState('');
   const [newPlan, setNewPlan] = useState<'mensal' | 'vitalicio'>('vitalicio');
   const [isAddingUser, setIsAddingUser] = useState(false);
@@ -46,6 +49,25 @@ export const AdminPanel: React.FC = () => {
     loadUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSetGift = async (userId: string, granted: boolean) => {
+    setUpdatingId(userId);
+    try {
+      const res = await fetch('/api/admin/set-gift', {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ userId, granted }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao atualizar o presente.');
+      showToast(granted ? 'Presente liberado!' : 'Presente removido.');
+      await loadUsers();
+    } catch (err: any) {
+      showToast('Erro ao atualizar presente', err.message, 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleSetSubscription = async (
     userId: string,
@@ -120,6 +142,58 @@ export const AdminPanel: React.FC = () => {
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           Atualizar
         </button>
+      </div>
+
+      {/* Demo / preview tabs */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-start gap-2.5">
+            <div className="w-9 h-9 shrink-0 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <FlaskConical className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Modo demonstração
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xl leading-relaxed mt-0.5">
+                Libera as abas <span className="font-semibold text-slate-300">Presente</span> e{' '}
+                <span className="font-semibold text-slate-300">Dashboard</span> para testar o visual
+                das notificações e dos números de exemplo. Vale só neste navegador.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const next = !demoOn;
+              setDemoEnabled(next);
+              setDemoOn(next);
+              showToast(
+                next ? 'Modo demonstração ativado!' : 'Modo demonstração desativado.',
+                next ? 'As abas Presente e Dashboard já aparecem no menu.' : undefined
+              );
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              demoOn
+                ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white shadow-[0_0_18px_rgba(129,38,194,0.35)]'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            }`}
+          >
+            <span
+              className={`relative w-8 h-4 rounded-full transition-colors ${
+                demoOn ? 'bg-white/30' : 'bg-slate-600'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
+                  demoOn ? 'left-[18px]' : 'left-0.5'
+                }`}
+              />
+            </span>
+            {demoOn ? 'Ativado' : 'Ativar'}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -227,6 +301,21 @@ export const AdminPanel: React.FC = () => {
                             </button>
                           </>
                         )}
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleSetGift(u.id, !u.giftGrantedAt)}
+                          title={u.giftGrantedAt ? 'Remover o presente' : 'Liberar o presente (abre em 6 dias)'}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold transition-colors disabled:opacity-50 ${
+                            u.giftGrantedAt
+                              ? 'text-[#B65AF0] bg-[#1C0D2A] border border-[#8126C2]/50'
+                              : 'text-slate-400 bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <Gift className="w-3.5 h-3.5" />
+                          Presente
+                        </button>
+
                         {u.subscriptionStatus === 'active' && (
                           <button
                             type="button"

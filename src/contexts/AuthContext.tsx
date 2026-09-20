@@ -8,6 +8,7 @@ interface AuthContextValue {
   isLoading: boolean;
   hasActiveSubscription: boolean;
   isAdmin: boolean;
+  giftGrantedAt: string | null;
   isAccessLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
@@ -22,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [giftGrantedAt, setGiftGrantedAt] = useState<string | null>(null);
   const [isAccessLoading, setIsAccessLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!userId) {
       setHasActiveSubscription(false);
       setIsAdmin(false);
+      setGiftGrantedAt(null);
       setIsAccessLoading(false);
       return;
     }
@@ -60,15 +63,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('status', 'active')
           .limit(1)
           .maybeSingle(),
-        supabase.from('profiles').select('is_admin').eq('id', userId).maybeSingle(),
+        // `select('*')` on purpose: naming gift_granted_at explicitly makes the
+        // whole query 400 until that migration is applied, which would also
+        // wipe out is_admin.
+        supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       ]);
 
       if (cancelled) return;
 
       setHasActiveSubscription(subResult.status === 'fulfilled' && !!subResult.value.data);
-      setIsAdmin(
-        profileResult.status === 'fulfilled' && !!(profileResult.value.data as { is_admin?: boolean } | null)?.is_admin
-      );
+      const profile =
+        profileResult.status === 'fulfilled'
+          ? (profileResult.value.data as { is_admin?: boolean; gift_granted_at?: string } | null)
+          : null;
+
+      setIsAdmin(!!profile?.is_admin);
+      setGiftGrantedAt(profile?.gift_granted_at ?? null);
       setIsAccessLoading(false);
     })();
 
@@ -106,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         hasActiveSubscription,
         isAdmin,
+        giftGrantedAt,
         isAccessLoading,
         signIn,
         signUp,

@@ -22,6 +22,14 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { PaywallScreen } from './components/auth/PaywallScreen';
 import { AdminPanel } from './components/AdminPanel';
+import { SiteAnalysisView } from './components/SiteAnalysisView';
+import { PortfolioView } from './components/PortfolioView';
+import { GiftView } from './components/GiftView';
+import { DemoDashboardView } from './components/DemoDashboardView';
+import { isDemoEnabled, DEMO_FLAG_EVENT } from './data/demoFlag';
+import { GenerationModeModal, type GenerationMode } from './components/GenerationModeModal';
+import { AiStudioModal } from './components/AiStudioModal';
+import { generateNicheSmartFallbackSite } from './services/generator/fallbackGenerator';
 import { searchLeads } from './services/osmService';
 import { generateSiteContent } from './services/geminiService';
 import {
@@ -33,6 +41,7 @@ import {
   DEFAULT_SETTINGS,
 } from './services/storageService';
 import { Loader2 } from 'lucide-react';
+import { ProgressiveBlur } from './components/ProgressiveBlur';
 
 function AppContent() {
   const { showToast } = useToast();
@@ -42,6 +51,7 @@ function AppContent() {
     isLoading: isAuthLoading,
     hasActiveSubscription,
     isAdmin,
+    giftGrantedAt,
     isAccessLoading,
     signOut,
   } = useAuth();
@@ -82,6 +92,22 @@ function AppContent() {
 
   // Batch Generation State
   const [batchLeads, setBatchLeads] = useState<Lead[] | null>(null);
+
+  // Demo preview tabs, toggled from the admin panel (per browser)
+  const [demoEnabled, setDemoEnabled] = useState(isDemoEnabled());
+  useEffect(() => {
+    const sync = () => setDemoEnabled(isDemoEnabled());
+    window.addEventListener('storage', sync);
+    window.addEventListener(DEMO_FLAG_EVENT, sync);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener(DEMO_FLAG_EVENT, sync);
+    };
+  }, []);
+
+  // Site generation: pick a mode first, then run it
+  const [modeLead, setModeLead] = useState<Lead | null>(null);
+  const [aiStudioLead, setAiStudioLead] = useState<Lead | null>(null);
 
   // Load settings & saved leads from Supabase once the user is authenticated
   useEffect(() => {
@@ -186,8 +212,31 @@ function AppContent() {
     }
   };
 
-  // Handle single lead site generation
-  const handleGenerateSite = async (lead: Lead) => {
+  // Clicking "gerar site" asks how first; each mode takes it from here.
+  const handleGenerateSite = (lead: Lead) => {
+    setModeLead(lead);
+  };
+
+  const handleSelectGenerationMode = async (mode: GenerationMode) => {
+    const lead = modeLead;
+    if (!lead) return;
+    setModeLead(null);
+
+    if (mode === 'aistudio') {
+      setDetailLead(null);
+      setAiStudioLead(lead);
+      return;
+    }
+
+    if (mode === 'basic') {
+      // Built locally from the niche template — no API call, no key needed.
+      setDetailLead(null);
+      setEditorLead(lead);
+      setEditorSiteData(generateNicheSmartFallbackSite(lead));
+      showToast('Site básico gerado!', 'Feito a partir do modelo do nicho, sem IA.');
+      return;
+    }
+
     setIsGeneratingSingle(true);
     showToast('Iniciando Gemini AI...', `Criando landing page para "${lead.name}".`, 'info');
 
@@ -278,6 +327,8 @@ function AppContent() {
         userEmail={user?.email || ''}
         onSignOut={signOut}
         isAdmin={isAdmin}
+        demoEnabled={demoEnabled}
+        giftUnlocked={Boolean(giftGrantedAt) || demoEnabled}
       />
 
       {/* Main Content Area */}
@@ -324,6 +375,18 @@ function AppContent() {
               />
             )}
 
+            {/* TAB: SITE PRICING ANALYSIS */}
+            {activeTab === 'analise' && <SiteAnalysisView savedLeads={savedLeads} />}
+
+            {/* TAB: AI PORTFOLIO BUILDER */}
+            {activeTab === 'portfolio' && <PortfolioView />}
+
+            {/* TABS: demo preview surfaces, gated by the admin toggle */}
+            {activeTab === 'presente' && (giftGrantedAt || demoEnabled) && (
+              <GiftView giftGrantedAt={giftGrantedAt} previewUnlocked={!giftGrantedAt && demoEnabled} />
+            )}
+            {activeTab === 'dashboard' && demoEnabled && <DemoDashboardView />}
+
             {/* TAB 3: ANALYTICS & METRICS */}
             {activeTab === 'metrics' && (
               <MetricsDashboard
@@ -349,7 +412,29 @@ function AppContent() {
         </main>
       </div>
 
+      {/* Bottom edge blur over the content column only. Desktop-only because on
+          mobile it would sit over the fixed bottom nav, and offset by the w-64
+          sidebar so it never covers the account controls in its footer. */}
+      <div className="hidden md:block">
+        <ProgressiveBlur height={140} left="16rem" />
+      </div>
+
       {/* MODALS */}
+
+      {/* Choose how to generate the site */}
+      <GenerationModeModal
+        lead={modeLead}
+        geminiKey={settings.customGeminiKey || ''}
+        onSaveGeminiKey={async (key) => {
+          setSettings(await saveSettings({ customGeminiKey: key }));
+          showToast('Chave do Gemini conectada!', 'A geração com IA já pode ser usada.');
+        }}
+        onClose={() => setModeLead(null)}
+        onSelect={handleSelectGenerationMode}
+      />
+
+      {/* Google AI Studio flow: identity → prompt → open */}
+      <AiStudioModal lead={aiStudioLead} onClose={() => setAiStudioLead(null)} />
 
       {/* Onboarding 3-step walkthrough */}
       <OnboardingModal
