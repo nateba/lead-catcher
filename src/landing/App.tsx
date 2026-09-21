@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import FluidFieldBackground from './components/FluidField';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -12,18 +12,42 @@ import { Footer } from './components/Footer';
 import { LeadModal } from './components/LeadModal';
 import { LeadItem } from './types';
 import { ProgressiveBlur } from '../components/ProgressiveBlur';
+import { CHECKOUT_URLS, type PlanId } from '../data/checkout';
+import { affiliatePromise, hasAffiliateSlug } from './affiliate';
 
 export default function App() {
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
 
-  const CHECKOUT_URLS: Record<string, string> = {
-    mensal: 'https://checkout.applyfy.com.br/checkout/cmu2vbt1y0jqv01pwpekeuyx2?offer=YKR5ZRD',
-    vitalicio: 'https://checkout.applyfy.com.br/checkout/cmu2wb7u50l9201oh3jbdn2dn?offer=SPN02ZK',
-  };
+  // Starts on our own links and swaps to the affiliate's once the lookup lands.
+  // The request is already in flight before this component mounts.
+  const [checkoutUrls, setCheckoutUrls] = useState<Record<PlanId, string>>(CHECKOUT_URLS);
+
+  useEffect(() => {
+    let cancelled = false;
+    affiliatePromise.then((affiliate) => {
+      if (!cancelled && affiliate) setCheckoutUrls(affiliate.urls);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Affiliate URLs serve the same page as /, so let only the canonical one be
+  // indexed — otherwise every affiliate is a duplicate competing with it.
+  useEffect(() => {
+    if (!hasAffiliateSlug) return;
+    const tag = document.createElement('meta');
+    tag.name = 'robots';
+    tag.content = 'noindex, follow';
+    document.head.appendChild(tag);
+    return () => {
+      tag.remove();
+    };
+  }, []);
 
   const handleOpenCheckout = (planId: string = 'vitalicio') => {
-    window.location.href = CHECKOUT_URLS[planId] || CHECKOUT_URLS.vitalicio;
+    window.location.href = checkoutUrls[planId as PlanId] || checkoutUrls.vitalicio;
   };
 
   const handleSelectLead = (lead: LeadItem) => {

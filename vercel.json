@@ -3,6 +3,15 @@
   "buildCommand": "vite build",
   "outputDirectory": "dist",
   "functions": {
-    "api/**/*.ts": { "includeFiles": "api/_shared/**", "maxDuration": 60 }
-  }
+    "api/**/*.ts": {
+      "includeFiles": "api/_shared/**",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/a/:slug",
+      "destination": "/index.html"
+    }
+  ]
 }

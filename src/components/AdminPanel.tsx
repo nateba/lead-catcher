@@ -3,6 +3,7 @@ import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown, UserPlus, FlaskCo
 import { authHeaders } from '../lib/apiAuth';
 import { useToast } from './Toast';
 import { isDemoEnabled, setDemoEnabled } from '../data/demoFlag';
+import { AffiliatesPanel } from './AffiliatesPanel';
 
 interface AdminUser {
   id: string;
@@ -344,6 +345,8 @@ export const AdminPanel: React.FC = () => {
           </table>
         </div>
       </div>
+
+      <AffiliatesPanel />
     </div>
   );
 };
