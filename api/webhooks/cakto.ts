@@ -131,6 +131,40 @@ function offerIdsFrom(name: string): string[] {
     .filter(Boolean);
 }
 
+
+/**
+ * The gift is a purchase bonus that opens six days after the sale. An admin
+ * handing it out from the panel opens it immediately instead, which is why the
+ * unlock moment is stored rather than derived from the grant date.
+ *
+ * Never overwrites an existing grant: a renewal must not restart someone's
+ * countdown, and it must not re-lock a gift they already opened.
+ */
+const GIFT_UNLOCK_DAYS = 6;
+
+async function grantGiftOnPurchase(admin: any, userId: string): Promise<void> {
+  try {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('gift_granted_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (profile?.gift_granted_at) return;
+
+    const now = Date.now();
+    await admin
+      .from('profiles')
+      .update({
+        gift_granted_at: new Date(now).toISOString(),
+        gift_unlocks_at: new Date(now + GIFT_UNLOCK_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      })
+      .eq('id', userId);
+  } catch {
+    // A failed bonus must never fail the sale: access is already granted above.
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido.' });
@@ -288,6 +322,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await note(false, `evento ${event} para ${email}: falha ao gravar assinatura — ${subError.message}`);
         return res.status(200).json({ received: true, error: true });
       }
+
+      await grantGiftOnPurchase(admin, user.id);
 
       await note(true, `email=${email} event=${event} plan=${plan} (${how}) sale=${saleId || 'n/a'} via ${verifiedBy}.${unmapped}`);
       return res.status(200).json({ received: true, action: 'granted', plan });

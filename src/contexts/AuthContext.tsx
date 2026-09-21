@@ -9,6 +9,8 @@ interface AuthContextValue {
   hasActiveSubscription: boolean;
   isAdmin: boolean;
   giftGrantedAt: string | null;
+  /** When the gift opens. Instant for admin grants, +6 days for purchases. */
+  giftUnlocksAt: string | null;
   isAccessLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
@@ -24,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [giftGrantedAt, setGiftGrantedAt] = useState<string | null>(null);
+  const [giftUnlocksAt, setGiftUnlocksAt] = useState<string | null>(null);
   const [isAccessLoading, setIsAccessLoading] = useState(true);
 
   useEffect(() => {
@@ -47,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setHasActiveSubscription(false);
       setIsAdmin(false);
       setGiftGrantedAt(null);
+      setGiftUnlocksAt(null);
       setIsAccessLoading(false);
       return;
     }
@@ -74,11 +78,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setHasActiveSubscription(subResult.status === 'fulfilled' && !!subResult.value.data);
       const profile =
         profileResult.status === 'fulfilled'
-          ? (profileResult.value.data as { is_admin?: boolean; gift_granted_at?: string } | null)
+          ? (profileResult.value.data as {
+              is_admin?: boolean;
+              gift_granted_at?: string;
+              gift_unlocks_at?: string;
+            } | null)
           : null;
 
       setIsAdmin(!!profile?.is_admin);
       setGiftGrantedAt(profile?.gift_granted_at ?? null);
+      setGiftUnlocksAt(profile?.gift_unlocks_at ?? null);
       setIsAccessLoading(false);
     })();
 
@@ -117,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasActiveSubscription,
         isAdmin,
         giftGrantedAt,
+        giftUnlocksAt,
         isAccessLoading,
         signIn,
         signUp,

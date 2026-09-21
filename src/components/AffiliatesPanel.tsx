@@ -9,21 +9,33 @@ interface Affiliate {
   id: string;
   slug: string;
   name: string;
+  user_id: string | null;
   checkout_mensal: string | null;
   checkout_vitalicio: string | null;
   active: boolean;
   created_at: string;
 }
 
+export interface AffiliateUserOption {
+  id: string;
+  email: string;
+}
+
+interface AffiliatesPanelProps {
+  /** Existing accounts, so an affiliate is picked rather than typed. */
+  users?: AffiliateUserOption[];
+}
+
 const affiliateUrl = (slug: string) => `${window.location.origin}${AFFILIATE_PATH_PREFIX}${slug}`;
 
-export const AffiliatesPanel: React.FC = () => {
+export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) => {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Affiliate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const [userId, setUserId] = useState('');
   const [name, setName] = useState('');
   const [mensal, setMensal] = useState('');
   const [vitalicio, setVitalicio] = useState('');
@@ -58,9 +70,12 @@ export const AffiliatesPanel: React.FC = () => {
   }, []);
 
   const handleCreate = async () => {
-    const trimmedName = name.trim();
+    // Picking an account names the affiliate; the free field covers people who
+    // sell for you without having signed up.
+    const selected = users.find((u) => u.id === userId);
+    const trimmedName = (selected?.email || name).trim();
     if (!trimmedName) {
-      showToast('Informe o nome do afiliado', '', 'error');
+      showToast('Escolha um usuário ou escreva um nome', '', 'error');
       return;
     }
 
@@ -86,10 +101,12 @@ export const AffiliatesPanel: React.FC = () => {
       const { error } = await supabase.from('affiliates').insert({
         slug: randomSlug(),
         name: trimmedName,
+        user_id: userId || null,
         checkout_mensal: mensal.trim() || null,
         checkout_vitalicio: vitalicio.trim() || null,
       });
       if (!error) {
+        setUserId('');
         setName('');
         setMensal('');
         setVitalicio('');
@@ -164,14 +181,46 @@ export const AffiliatesPanel: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">Nome do afiliado</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex: Josué"
-              className={inputClass}
-            />
+            <label htmlFor="aff-user" className="block text-xs font-bold text-slate-300 mb-1.5">
+              Usuário
+            </label>
+            <select
+              id="aff-user"
+              value={userId}
+              onChange={(e) => {
+                setUserId(e.target.value);
+                if (e.target.value) setName('');
+              }}
+              className={`${inputClass} cursor-pointer`}
+            >
+              <option value="">— Não é usuário do app (escrever nome) —</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+            {users.length === 0 && (
+              <p className="text-xs text-slate-500 mt-1.5">
+                Nenhum usuário carregado. Use "Atualizar" no topo do painel.
+              </p>
+            )}
           </div>
+
+          {!userId && (
+            <div className="sm:col-span-2">
+              <label htmlFor="aff-name" className="block text-xs font-bold text-slate-300 mb-1.5">
+                Nome do afiliado
+              </label>
+              <input
+                id="aff-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Josué"
+                className={inputClass}
+              />
+            </div>
+          )}
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1.5">
               Link do checkout mensal

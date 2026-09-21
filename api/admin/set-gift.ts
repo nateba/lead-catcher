@@ -74,12 +74,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const admin = getSupabaseAdmin();
+  const now = new Date().toISOString();
+
+  // Handed out by an admin, so it opens right away. The six-day wait is a
+  // purchase bonus rule, applied by the payment webhooks instead.
   const { error } = await admin
     .from('profiles')
-    .update({ gift_granted_at: granted ? new Date().toISOString() : null })
+    .update(
+      granted
+        ? { gift_granted_at: now, gift_unlocks_at: now }
+        : { gift_granted_at: null, gift_unlocks_at: null }
+    )
     .eq('id', userId);
 
   if (error) {
+    // Between deploying this and running the migration the column is not there
+    // yet. Degrade to the old single-column behaviour rather than 500 on the
+    // admin's click; the gift then opens on the previous six-day schedule.
+    if (/gift_unlocks_at/.test(error.message)) {
+      const { error: legacyError } = await admin
+        .from('profiles')
+        .update({ gift_granted_at: granted ? now : null })
+        .eq('id', userId);
+
+      if (legacyError) {
+        return res.status(500).json({ error: legacyError.message });
+      }
+      return res.status(200).json({
+        success: true,
+        warning: 'Migration 20260922000000 pendente: o presente abrirá em 6 dias, não na hora.',
+      });
+    }
     return res.status(500).json({ error: error.message });
   }
 

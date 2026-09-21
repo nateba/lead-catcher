@@ -51,6 +51,7 @@ function AppContent() {
     hasActiveSubscription,
     isAdmin,
     giftGrantedAt,
+    giftUnlocksAt,
     isAccessLoading,
     signOut,
   } = useAuth();
@@ -402,7 +403,7 @@ function AppContent() {
 
             {/* TABS: demo preview surfaces, gated by the admin toggle */}
             {activeTab === 'presente' && (giftGrantedAt || demoEnabled) && (
-              <GiftView giftGrantedAt={giftGrantedAt} previewUnlocked={!giftGrantedAt && demoEnabled} />
+              <GiftView giftUnlocksAt={giftUnlocksAt} previewUnlocked={!giftGrantedAt && demoEnabled} />
             )}
             {activeTab === 'dashboard' && demoEnabled && <DemoDashboardView />}
 

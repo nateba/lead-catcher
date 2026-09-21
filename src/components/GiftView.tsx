@@ -42,22 +42,28 @@ const brl = (v: number) =>
 
 const UNLOCK_DAYS = 6;
 
-/** Days left before the gift opens, or 0 once it is available. */
-function daysUntilUnlock(grantedAt: string | null): number {
-  if (!grantedAt) return UNLOCK_DAYS;
-  const unlocksAt = new Date(grantedAt).getTime() + UNLOCK_DAYS * 24 * 60 * 60 * 1000;
-  return Math.max(0, Math.ceil((unlocksAt - Date.now()) / (24 * 60 * 60 * 1000)));
+/**
+ * Days left before the gift opens, or 0 once it is available.
+ *
+ * Reads the stored unlock moment rather than adding a fixed period to the grant
+ * date: an admin grant opens immediately while a purchase waits six days, so
+ * the two cannot be derived from the same timestamp.
+ */
+function daysUntilUnlock(unlocksAt: string | null): number {
+  if (!unlocksAt) return UNLOCK_DAYS;
+  const remainingMs = new Date(unlocksAt).getTime() - Date.now();
+  return Math.max(0, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
 }
 
 interface GiftViewProps {
-  giftGrantedAt?: string | null;
+  giftUnlocksAt?: string | null;
   /** Demo mode: skip the countdown so the panel can actually be used. */
   previewUnlocked?: boolean;
 }
 
-export const GiftView: React.FC<GiftViewProps> = ({ giftGrantedAt = null, previewUnlocked = false }) => {
+export const GiftView: React.FC<GiftViewProps> = ({ giftUnlocksAt = null, previewUnlocked = false }) => {
   const { showToast } = useToast();
-  const daysLeft = daysUntilUnlock(giftGrantedAt);
+  const daysLeft = daysUntilUnlock(giftUnlocksAt);
   const isLocked = !previewUnlocked && daysLeft > 0;
   const [config, setConfig] = useState<DemoConfig>({ manual: {}, sales: [emptySale()] });
   const [queue, setQueue] = useState<SaleNotification[]>([]);

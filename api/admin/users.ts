@@ -96,6 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // select('*') so a missing gift_granted_at column does not fail the query.
   const { data: profiles } = await admin.from('profiles').select('*');
   const giftById = new Map<string, string | null>((profiles || []).map((p: any) => [p.id, p.gift_granted_at ?? null]));
+  const giftUnlockById = new Map<string, string | null>((profiles || []).map((p: any) => [p.id, p.gift_unlocks_at ?? null]));
   const adminIds = new Set((profiles || []).filter((p: any) => p.is_admin).map((p: any) => p.id));
 
   const subsByUser = new Map<string, SubscriptionRow[]>();
@@ -116,6 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         createdAt: u.created_at,
         isAdmin: adminIds.has(u.id),
         giftGrantedAt: giftById.get(u.id) ?? null,
+        giftUnlocksAt: giftUnlockById.get(u.id) ?? null,
         subscriptionStatus: activeSub?.status || latestSub?.status || null,
         plan: activeSub?.plan || latestSub?.plan || null,
         provider: activeSub?.provider || latestSub?.provider || null,

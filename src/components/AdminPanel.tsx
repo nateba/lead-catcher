@@ -61,7 +61,13 @@ export const AdminPanel: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha ao atualizar o presente.');
-      showToast(granted ? 'Presente liberado!' : 'Presente removido.');
+      if (data.warning) {
+        showToast('Presente liberado, mas…', data.warning, 'info');
+      } else {
+        showToast(
+          granted ? 'Presente liberado! Já está aberto para ele.' : 'Presente removido.'
+        );
+      }
       await loadUsers();
     } catch (err: any) {
       showToast('Erro ao atualizar presente', err.message, 'error');
@@ -306,7 +312,7 @@ export const AdminPanel: React.FC = () => {
                           type="button"
                           disabled={isBusy}
                           onClick={() => handleSetGift(u.id, !u.giftGrantedAt)}
-                          title={u.giftGrantedAt ? 'Remover o presente' : 'Liberar o presente (abre em 6 dias)'}
+                          title={u.giftGrantedAt ? 'Remover o presente' : 'Liberar o presente (abre na hora)'}
                           className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold transition-colors disabled:opacity-50 ${
                             u.giftGrantedAt
                               ? 'text-[#B65AF0] bg-[#1C0D2A] border border-[#8126C2]/50'
@@ -346,7 +352,7 @@ export const AdminPanel: React.FC = () => {
         </div>
       </div>
 
-      <AffiliatesPanel />
+      <AffiliatesPanel users={users.map((u) => ({ id: u.id, email: u.email }))} />
     </div>
   );
 };
