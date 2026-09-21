@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, RefreshCw, CheckCircle2, XCircle, Crown, UserPlus, FlaskConical, Gift } from 'lucide-react';
+import {
+  ShieldCheck,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Crown,
+  UserPlus,
+  FlaskConical,
+  Gift,
+  Search,
+  Users2,
+} from 'lucide-react';
 import { authHeaders } from '../lib/apiAuth';
 import { useToast } from './Toast';
 import { isDemoEnabled, setDemoEnabled } from '../data/demoFlag';
@@ -31,6 +42,40 @@ export const AdminPanel: React.FC = () => {
   const [newEmail, setNewEmail] = useState('');
   const [newPlan, setNewPlan] = useState<'mensal' | 'vitalicio'>('vitalicio');
   const [isAddingUser, setIsAddingUser] = useState(false);
+
+  // Filtering the user list
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'no_sub' | 'gift' | 'affiliate' | 'admin'>('all');
+
+  // Which user ids already have an affiliate link, reported by the panel below
+  // so a row can say so and offer the right action.
+  const [affiliateUserIds, setAffiliateUserIds] = useState<Set<string>>(new Set());
+  // Set when "Tornar afiliado" is clicked; the affiliate form picks it up.
+  const [prefillAffiliate, setPrefillAffiliate] = useState<{ id: string; email: string } | null>(null);
+
+  const handleMakeAffiliate = (user: AdminUser) => {
+    setPrefillAffiliate({ id: user.id, email: user.email });
+    document.getElementById('affiliates-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const visibleUsers = users.filter((u) => {
+    const q = query.trim().toLowerCase();
+    if (q && !u.email.toLowerCase().includes(q)) return false;
+    switch (filter) {
+      case 'active':
+        return u.subscriptionStatus === 'active';
+      case 'no_sub':
+        return u.subscriptionStatus !== 'active';
+      case 'gift':
+        return Boolean(u.giftGrantedAt);
+      case 'affiliate':
+        return affiliateUserIds.has(u.id);
+      case 'admin':
+        return u.isAdmin;
+      default:
+        return true;
+    }
+  });
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -244,6 +289,47 @@ export const AdminPanel: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Filter bar */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por e-mail..."
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              ['all', 'Todos'],
+              ['active', 'Com acesso'],
+              ['no_sub', 'Sem assinatura'],
+              ['gift', 'Com presente'],
+              ['affiliate', 'Afiliados'],
+              ['admin', 'Admins'],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  filter === key
+                    ? 'bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white'
+                    : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-xs text-slate-500 shrink-0">
+            {visibleUsers.length} de {users.length}
+          </span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase tracking-wide">
@@ -256,9 +342,10 @@ export const AdminPanel: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {users.map((u) => {
+              {visibleUsers.map((u) => {
                 const statusInfo = u.subscriptionStatus ? STATUS_LABEL[u.subscriptionStatus] : null;
                 const isBusy = updatingId === u.id;
+                const isAffiliate = affiliateUserIds.has(u.id);
                 return (
                   <tr key={u.id} className="text-slate-700 dark:text-slate-300">
                     <td className="px-4 py-3 font-medium">
@@ -323,6 +410,24 @@ export const AdminPanel: React.FC = () => {
                           Presente
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() => handleMakeAffiliate(u)}
+                          title={
+                            isAffiliate
+                              ? 'Já é afiliado — ver na lista abaixo'
+                              : 'Criar landing de afiliado para este usuário'
+                          }
+                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-bold transition-colors ${
+                            isAffiliate
+                              ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-800'
+                              : 'text-slate-400 bg-slate-800 hover:text-white'
+                          }`}
+                        >
+                          <Users2 className="w-3.5 h-3.5" />
+                          {isAffiliate ? 'Afiliado' : 'Tornar afiliado'}
+                        </button>
+
                         {u.subscriptionStatus === 'active' && (
                           <button
                             type="button"
@@ -340,10 +445,12 @@ export const AdminPanel: React.FC = () => {
                   </tr>
                 );
               })}
-              {!isLoading && users.length === 0 && (
+              {!isLoading && visibleUsers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                    Nenhum usuário encontrado.
+                    {users.length === 0
+                      ? 'Nenhum usuário encontrado.'
+                      : 'Nenhum usuário bate com esse filtro.'}
                   </td>
                 </tr>
               )}
@@ -352,7 +459,11 @@ export const AdminPanel: React.FC = () => {
         </div>
       </div>
 
-      <AffiliatesPanel users={users.map((u) => ({ id: u.id, email: u.email }))} />
+      <AffiliatesPanel
+        users={users.map((u) => ({ id: u.id, email: u.email }))}
+        prefillUser={prefillAffiliate}
+        onLinkedUsersChange={setAffiliateUserIds}
+      />
     </div>
   );
 };

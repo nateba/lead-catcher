@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Users2, Plus, Copy, Check, Trash2, Loader2, Power, AlertCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Users2, Plus, Copy, Check, Trash2, Loader2, Power, AlertCircle, Search, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './Toast';
 import { checkoutUrlProblem, randomSlug } from '../data/checkout';
@@ -24,11 +24,19 @@ export interface AffiliateUserOption {
 interface AffiliatesPanelProps {
   /** Existing accounts, so an affiliate is picked rather than typed. */
   users?: AffiliateUserOption[];
+  /** Set by "Tornar afiliado" in the user list; selects that account here. */
+  prefillUser?: { id: string; email: string } | null;
+  /** Reports which accounts already have a link, so the user list can say so. */
+  onLinkedUsersChange?: (ids: Set<string>) => void;
 }
 
 const affiliateUrl = (slug: string) => `${window.location.origin}${AFFILIATE_PATH_PREFIX}${slug}`;
 
-export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) => {
+export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({
+  users = [],
+  prefillUser = null,
+  onLinkedUsersChange,
+}) => {
   const { showToast } = useToast();
   const [rows, setRows] = useState<Affiliate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +44,11 @@ export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [userId, setUserId] = useState('');
+  const [userQuery, setUserQuery] = useState('');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  // Each "Tornar afiliado" click is consumed once. Without this the effect
+  // re-fires when rows reload after creating, and wrongly reports a duplicate.
+  const consumedPrefill = useRef<object | null>(null);
   const [name, setName] = useState('');
   const [mensal, setMensal] = useState('');
   const [vitalicio, setVitalicio] = useState('');
@@ -68,6 +81,30 @@ export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) 
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Let the user list mark who already has a link.
+  useEffect(() => {
+    onLinkedUsersChange?.(new Set(rows.map((r) => r.user_id).filter(Boolean) as string[]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  // "Tornar afiliado" in the user list selects that account here.
+  useEffect(() => {
+    if (!prefillUser) return;
+    // Compared by reference: every click builds a fresh object, so clicking the
+    // same person again still works, while a rows reload does not re-fire this.
+    if (consumedPrefill.current === prefillUser) return;
+    consumedPrefill.current = prefillUser;
+    const existing = rows.find((r) => r.user_id === prefillUser.id);
+    if (existing) {
+      showToast('Esse usuário já é afiliado', `Link: ${affiliateUrl(existing.slug)}`, 'info');
+      return;
+    }
+    setUserId(prefillUser.id);
+    setUserQuery(prefillUser.email);
+    setName('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillUser]);
 
   const handleCreate = async () => {
     // Picking an account names the affiliate; the free field covers people who
@@ -107,6 +144,7 @@ export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) 
       });
       if (!error) {
         setUserId('');
+        setUserQuery('');
         setName('');
         setMensal('');
         setVitalicio('');
@@ -162,8 +200,13 @@ export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) 
   const inputClass =
     'w-full px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all';
 
+  const linkedUserIds = new Set(rows.map((r) => r.user_id).filter(Boolean) as string[]);
+  const matchingUsers = users
+    .filter((u) => u.email.toLowerCase().includes(userQuery.trim().toLowerCase()))
+    .slice(0, 50);
+
   return (
-    <div className="space-y-5">
+    <div id="affiliates-panel" className="space-y-5">
       {/* Create */}
       <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
         <div className="flex items-start gap-3 mb-4">
@@ -184,25 +227,78 @@ export const AffiliatesPanel: React.FC<AffiliatesPanelProps> = ({ users = [] }) 
             <label htmlFor="aff-user" className="block text-xs font-bold text-slate-300 mb-1.5">
               Usuário
             </label>
-            <select
-              id="aff-user"
-              value={userId}
-              onChange={(e) => {
-                setUserId(e.target.value);
-                if (e.target.value) setName('');
-              }}
-              className={`${inputClass} cursor-pointer`}
-            >
-              <option value="">— Não é usuário do app (escrever nome) —</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.email}
-                </option>
-              ))}
-            </select>
-            {users.length === 0 && (
-              <p className="text-xs text-slate-500 mt-1.5">
-                Nenhum usuário carregado. Use "Atualizar" no topo do painel.
+
+            {/* Typing filters the list. A plain select is unusable once the
+                account count grows past a screenful. */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+              <input
+                id="aff-user"
+                value={userQuery}
+                onChange={(e) => {
+                  setUserQuery(e.target.value);
+                  setUserId('');
+                  setIsPickerOpen(true);
+                }}
+                onFocus={() => setIsPickerOpen(true)}
+                // Delayed so a click on an option lands before the list closes.
+                onBlur={() => setTimeout(() => setIsPickerOpen(false), 150)}
+                placeholder="Buscar usuário pelo e-mail..."
+                autoComplete="off"
+                className={`${inputClass} pl-9 ${userId ? 'border-emerald-700' : ''}`}
+              />
+              {userId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserId('');
+                    setUserQuery('');
+                  }}
+                  title="Limpar seleção"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {isPickerOpen && !userId && (
+                <div className="absolute z-20 mt-1 w-full max-h-52 overflow-y-auto rounded-xl bg-slate-800 border border-slate-700 shadow-2xl">
+                  {matchingUsers.length === 0 ? (
+                    <p className="px-3 py-2.5 text-xs text-slate-400">
+                      {users.length === 0
+                        ? 'Nenhum usuário carregado. Use "Atualizar" no topo.'
+                        : 'Nenhum e-mail bate com essa busca.'}
+                    </p>
+                  ) : (
+                    matchingUsers.map((u) => {
+                      const taken = linkedUserIds.has(u.id);
+                      return (
+                        <button
+                          key={u.id}
+                          type="button"
+                          disabled={taken}
+                          onClick={() => {
+                            setUserId(u.id);
+                            setUserQuery(u.email);
+                            setName('');
+                            setIsPickerOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-transparent flex items-center justify-between gap-2"
+                        >
+                          <span className="truncate">{u.email}</span>
+                          {taken && <span className="text-[10px] text-slate-400 shrink-0">já é afiliado</span>}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+
+            {userId && (
+              <p className="flex items-center gap-1 text-xs text-emerald-400 mt-1.5">
+                <Check className="w-3 h-3" />
+                Conta vinculada
               </p>
             )}
           </div>
