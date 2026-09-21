@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Loader2, AlertCircle, CheckCircle2, KeyRound } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { HypeLeadsLogo } from '../BrandLogo';
+
+// Must match the password the payment webhooks use when provisioning accounts.
+const DEFAULT_PASSWORD = 'hypeleads123';
 
 export const AuthScreen: React.FC = () => {
   const { signIn, signUp } = useAuth();
@@ -89,6 +92,25 @@ export const AuthScreen: React.FC = () => {
                 className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
               />
             </div>
+
+            {/* Buyers never signed up: the webhook creates the account on payment
+                with this password, so the login screen has to say what it is. */}
+            {mode === 'signin' && (
+              <div className="mt-2.5 flex items-start gap-2 p-2.5 rounded-lg bg-indigo-950/40 border border-indigo-900/70">
+                <KeyRound className="w-3.5 h-3.5 shrink-0 mt-0.5 text-indigo-400" />
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Acabou de comprar? Sua senha padrão é{' '}
+                  <button
+                    type="button"
+                    onClick={() => setPassword(DEFAULT_PASSWORD)}
+                    className="font-bold text-indigo-300 underline underline-offset-2 hover:text-white transition-colors"
+                  >
+                    {DEFAULT_PASSWORD}
+                  </button>
+                  . Troque em Configurações depois de entrar.
+                </p>
+              </div>
+            )}
           </div>
 
           {error && (

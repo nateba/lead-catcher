@@ -2,9 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { createHmac, timingSafeEqual } from 'crypto';
 
-// Cakto signs the *raw* bytes it sent, so Vercel must not parse the body for
-// us — a re-serialized object would not match the signature byte for byte.
-export const config = { api: { bodyParser: false } };
+// NOTE: `export const config = { api: { bodyParser: false } }` is a Next.js
+// convention; Vercel Functions ignore it and still attach the body helpers, so
+// the raw stream may already be drained by the time this runs. The handler
+// therefore reads the raw bytes when it can and falls back to the parsed
+// `req.body`, verifying by Cakto's body `secret` in that case — HMAC needs the
+// exact bytes and a re-serialized object would not reproduce them.
 
 // Inlined rather than imported from ../shared/*: Vercel's function bundler
 // fails to resolve relative imports that cross up out of this nested
@@ -68,13 +71,34 @@ const NO_ACTION = new Set([
   'openfinance_nubank_gerado',
 ]);
 
+/**
+ * Raw bytes if the stream is still readable, else '' — the platform may have
+ * consumed it already to populate `req.body`.
+ */
 function readRawBody(req: VercelRequest): Promise<string> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
+    if ((req as any).readableEnded || (req as any).complete) return resolve('');
     const chunks: Buffer[] = [];
+    // A drained stream never emits 'end', so never hang the function on it.
+    const done = setTimeout(() => resolve(''), 1500);
     req.on('data', (c: Buffer) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    req.on('error', reject);
+    req.on('end', () => {
+      clearTimeout(done);
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    });
+    req.on('error', () => {
+      clearTimeout(done);
+      resolve('');
+    });
   });
+}
+
+function safeJson(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -120,10 +144,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const raw = await readRawBody(req);
 
   let body: any;
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    return res.status(400).json({ error: 'Corpo não é JSON válido.' });
+  if (raw) {
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return res.status(400).json({ error: 'Corpo não é JSON válido.' });
+    }
+  } else {
+    // Stream already drained by the platform helpers — use what they parsed.
+    body = typeof req.body === 'string' ? safeJson(req.body) : req.body;
+  }
+
+  if (!body || typeof body !== 'object') {
+    return res.status(400).json({ error: 'Corpo ausente ou não é JSON.' });
   }
 
   // Cakto offers two verifications. Prefer the signed headers; fall back to the
@@ -135,8 +168,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     Array.isArray(req.headers['x-cakto-timestamp']) ? req.headers['x-cakto-timestamp'][0] : req.headers['x-cakto-timestamp']
   );
 
+  // Only attempt HMAC when the exact bytes are in hand. Without them, fall
+  // through to the body secret rather than rejecting a legitimate event.
   let verifiedBy: string;
-  if (sigHeader && tsHeader) {
+  if (raw && sigHeader && tsHeader) {
     if (!signatureMatches(raw, tsHeader, sigHeader, secret)) {
       return res.status(401).json({ error: 'Assinatura inválida.' });
     }
