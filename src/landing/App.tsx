@@ -13,7 +13,7 @@ import { LeadModal } from './components/LeadModal';
 import { LeadItem } from './types';
 import { ProgressiveBlur } from '../components/ProgressiveBlur';
 import { CHECKOUT_URLS, type PlanId } from '../data/checkout';
-import { affiliatePromise, hasAffiliateSlug } from './affiliate';
+import { affiliatePromise, hasAffiliateSlug, withTrackingParams } from './affiliate';
 
 export default function App() {
   const [selectedLead, setSelectedLead] = useState<LeadItem | null>(null);
@@ -47,7 +47,11 @@ export default function App() {
   }, []);
 
   const handleOpenCheckout = (planId: string = 'vitalicio') => {
-    window.location.href = checkoutUrls[planId as PlanId] || checkoutUrls.vitalicio;
+    const base = checkoutUrls[planId as PlanId] || checkoutUrls.vitalicio;
+    // Carry the affiliate code and campaign params through to the checkout.
+    // Cakto sends its affiliates here with ?code=..., and dropping it loses
+    // them the commission without anything visibly failing.
+    window.location.href = withTrackingParams(base);
   };
 
   const handleSelectLead = (lead: LeadItem) => {

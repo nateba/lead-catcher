@@ -66,6 +66,52 @@ async function lookup(slug: string): Promise<AffiliateCheckout | null> {
   }
 }
 
+/**
+ * Params the payment platforms and ad tools use to attribute a sale.
+ *
+ * `code` is Cakto's affiliate parameter: their affiliate links redirect to the
+ * product's sales page with it appended, and it has to survive the hop to the
+ * checkout or the commission is lost. Nothing errors when it is dropped, which
+ * is exactly why it is worth forwarding explicitly.
+ */
+const TRACKING_PARAMS = [
+  'code',
+  'ref',
+  'aff',
+  'affiliate',
+  'src',
+  'sck',
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+];
+
+/**
+ * Copies the tracking params from the current page onto a checkout URL.
+ *
+ * Never overwrites one the checkout URL already carries: an affiliate's own
+ * link, stored via /a/<slug>, already has their code and must win over whatever
+ * happens to be in the address bar.
+ */
+export function withTrackingParams(checkoutUrl: string, search = window.location.search): string {
+  try {
+    const incoming = new URLSearchParams(search);
+    const target = new URL(checkoutUrl);
+
+    for (const key of TRACKING_PARAMS) {
+      const value = incoming.get(key);
+      if (value && !target.searchParams.has(key)) {
+        target.searchParams.set(key, value);
+      }
+    }
+    return target.toString();
+  } catch {
+    return checkoutUrl;
+  }
+}
+
 const initialSlug = typeof window !== 'undefined' ? slugFromLocation() : null;
 
 /** Resolves to null on a normal visit, or when the slug is unknown/inactive. */
