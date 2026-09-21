@@ -98,7 +98,8 @@ export interface Lead {
   avatarBg: string;
   closed?: boolean;
   tags?: Record<string, string>;
-  source: 'openstreetmap';
+  /** 'manual' covers businesses typed in from the Google Maps search. */
+  source: 'openstreetmap' | 'manual';
   leadScore: number; // 0 to 100
   leadQuality: LeadQualityTier;
   leadQualityLabel: string;

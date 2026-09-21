@@ -150,6 +150,25 @@ function AppContent() {
     showToast('Busca cancelada', 'A operação foi interrompida.', 'info');
   };
 
+  // A business typed in from the Google Maps search. It joins the same results
+  // list as a scraped one, so site generation, CRM and export all work unchanged.
+  const handleManualLead = (lead: Lead) => {
+    setSearchResults((prev) => {
+      const already = prev.some(
+        (l) =>
+          l.name.trim().toLowerCase() === lead.name.trim().toLowerCase() &&
+          l.city === lead.city
+      );
+      if (already) {
+        showToast('Essa empresa já está na lista', lead.name, 'info');
+        return prev;
+      }
+      return [lead, ...prev];
+    });
+    setHasSearched(true);
+    showToast('Empresa adicionada!', `${lead.name} já pode gerar site.`);
+  };
+
   // Perform search via OSM Overpass & Scorer Pipeline
   const handleExecuteSearch = async (filters: SearchFilters) => {
     // Abort any prior ongoing search
@@ -341,6 +360,7 @@ function AppContent() {
                 {/* Search Form Card */}
                 <SearchForm
                   onSearch={handleExecuteSearch}
+                  onManualLead={handleManualLead}
                   onCancelSearch={handleCancelSearch}
                   isLoading={isSearching}
                   loadingStep={loadingStep}

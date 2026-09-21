@@ -19,8 +19,9 @@ import {
   RotateCcw,
   X,
   Target,
+  ClipboardPlus,
 } from 'lucide-react';
-import { SearchFilters, RecentSearch } from '../types';
+import { SearchFilters, RecentSearch, Lead } from '../types';
 import { BRAZIL_STATES, BUSINESS_CATEGORIES } from '../data/categories';
 import { NICHE_DEFINITIONS, findNicheByTerm } from '../data/nicheMappings';
 import { getNicheIcon } from '../data/nicheIcons';
@@ -32,6 +33,7 @@ import {
   type CountryOption,
 } from '../services/locationService';
 import { getRecentSearches, saveRecentSearch } from '../services/storageService';
+import { buildManualLead } from '../utils/manualLead';
 
 // Labels carry qualifiers ("Salão de Beleza & Estética") that hurt a plain-text
 // Google search, so keep only the leading name.
@@ -63,6 +65,8 @@ interface SearchFormProps {
   isLoading: boolean;
   loadingStep: number;
   loadingMessage: string;
+  /** Manual mode: hand a hand-typed business straight to the results grid. */
+  onManualLead?: (lead: Lead) => void;
 }
 
 export const SearchForm: React.FC<SearchFormProps> = ({
@@ -71,6 +75,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   isLoading,
   loadingStep,
   loadingMessage,
+  onManualLead,
 }) => {
   const [state, setState] = useState('SP');
   const [city, setCity] = useState('São Paulo');
@@ -87,6 +92,16 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   const [isLoadingManualStates, setIsLoadingManualStates] = useState(false);
   const [isLoadingManualCities, setIsLoadingManualCities] = useState(false);
   const [manualError, setManualError] = useState('');
+
+  // Fields for a business copied out of Google Maps.
+  const [entryName, setEntryName] = useState('');
+  const [entryPhone, setEntryPhone] = useState('');
+  const [entryStreet, setEntryStreet] = useState('');
+  const [entryNumber, setEntryNumber] = useState('');
+  const [entryNeighbourhood, setEntryNeighbourhood] = useState('');
+  const [entryWebsite, setEntryWebsite] = useState('');
+  const [entryHours, setEntryHours] = useState('');
+  const [entryError, setEntryError] = useState('');
   const [categoryKey, setCategoryKey] = useState('barbearia');
   const [customTag, setCustomTag] = useState('');
   const [radiusKm, setRadiusKm] = useState(5);
@@ -129,6 +144,43 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     countryLabel
   );
   const mapsEmbedUrl = buildGoogleMapsEmbedUrl(mapsQuery);
+
+  const manualInputClass =
+    'w-full px-3.5 py-2.5 bg-slate-800/60 border border-slate-700 rounded-xl text-sm font-medium text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all';
+
+  const handleAddManualLead = () => {
+    const name = entryName.trim();
+    if (!name) {
+      setEntryError('O nome da empresa é obrigatório.');
+      return;
+    }
+    if (!onManualLead) return;
+
+    setEntryError('');
+    onManualLead(
+      buildManualLead({
+        name,
+        phone: entryPhone,
+        street: entryStreet,
+        housenumber: entryNumber,
+        neighbourhood: entryNeighbourhood,
+        website: entryWebsite,
+        openingHours: entryHours,
+        city: manualCity || manualState,
+        state: manualState,
+        categoryKey: selectedCategory?.key || 'personalizado',
+        categoryLabel: selectedCategory?.label || 'Personalizado',
+      })
+    );
+
+    setEntryName('');
+    setEntryPhone('');
+    setEntryStreet('');
+    setEntryNumber('');
+    setEntryNeighbourhood('');
+    setEntryWebsite('');
+    setEntryHours('');
+  };
 
   const handleOpenGoogleMaps = () => {
     window.open(buildGoogleMapsUrl(mapsQuery), '_blank', 'noopener,noreferrer');
@@ -615,9 +667,137 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
               <p className="text-[13px] text-slate-500 leading-relaxed">
                 O mapa acima é o próprio Google Maps. Abra em aba nova para ver a lista completa,
-                telefones e avaliações. Use quando o nicho tiver pouca cobertura no OpenStreetMap —
-                os resultados daqui não entram no CRM automaticamente.
+                telefones e avaliações. Use quando o nicho tiver pouca cobertura no OpenStreetMap.
               </p>
+
+              {/* Bring a business from Maps into the app. Without this the manual
+                  mode dead-ends: you find the company and cannot do anything with it. */}
+              <div className="pt-4 border-t border-[#25123A] space-y-3.5">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-bold text-white">
+                    <ClipboardPlus className="w-4 h-4 text-[#B65AF0]" />
+                    Achou a empresa? Traga para cá
+                  </p>
+                  <p className="text-[13px] text-slate-400 mt-0.5 leading-relaxed">
+                    Copie os dados do Google Maps. Ela entra na lista de resultados e você gera o
+                    site igual ao da busca automática.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label htmlFor="entry-name" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                      Nome da empresa <span className="text-rose-400">*</span>
+                    </label>
+                    <input
+                      id="entry-name"
+                      value={entryName}
+                      onChange={(e) => {
+                        setEntryName(e.target.value);
+                        if (entryError) setEntryError('');
+                      }}
+                      placeholder="Ex: Barbearia do Zé"
+                      className={manualInputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="entry-phone" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                      Telefone / WhatsApp
+                    </label>
+                    <input
+                      id="entry-phone"
+                      value={entryPhone}
+                      onChange={(e) => setEntryPhone(e.target.value)}
+                      placeholder="(11) 98765-4321"
+                      className={manualInputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="entry-site" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                      Site atual (se tiver)
+                    </label>
+                    <input
+                      id="entry-site"
+                      value={entryWebsite}
+                      onChange={(e) => setEntryWebsite(e.target.value)}
+                      placeholder="deixe vazio se não tem site"
+                      className={manualInputClass}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2 grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <label htmlFor="entry-street" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                        Rua
+                      </label>
+                      <input
+                        id="entry-street"
+                        value={entryStreet}
+                        onChange={(e) => setEntryStreet(e.target.value)}
+                        placeholder="Av. Paulista"
+                        className={manualInputClass}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="entry-number" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                        Número
+                      </label>
+                      <input
+                        id="entry-number"
+                        value={entryNumber}
+                        onChange={(e) => setEntryNumber(e.target.value)}
+                        placeholder="1000"
+                        className={manualInputClass}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="entry-hood" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                      Bairro
+                    </label>
+                    <input
+                      id="entry-hood"
+                      value={entryNeighbourhood}
+                      onChange={(e) => setEntryNeighbourhood(e.target.value)}
+                      placeholder="Centro"
+                      className={manualInputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="entry-hours" className="block text-[13px] font-bold text-slate-400 mb-1.5">
+                      Horário de funcionamento
+                    </label>
+                    <input
+                      id="entry-hours"
+                      value={entryHours}
+                      onChange={(e) => setEntryHours(e.target.value)}
+                      placeholder="Seg-Sex 09:00-18:00"
+                      className={manualInputClass}
+                    />
+                  </div>
+                </div>
+
+                {entryError && <p className="text-[13px] text-rose-400">{entryError}</p>}
+
+                <button
+                  type="button"
+                  onClick={handleAddManualLead}
+                  disabled={!entryName.trim()}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-extrabold uppercase tracking-wide bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white hover:brightness-110 shadow-[0_0_24px_rgba(129,38,194,0.35)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ClipboardPlus className="w-4 h-4" />
+                  Adicionar aos resultados
+                </button>
+
+                <p className="text-[13px] text-slate-500 leading-relaxed">
+                  Só o nome é obrigatório. Quanto mais campos você preencher, melhor a nota do lead
+                  e mais completo o site que a IA gera.
+                </p>
+              </div>
             </div>
           )}
 
