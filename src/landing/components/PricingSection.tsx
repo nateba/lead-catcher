@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Check, Sparkles, Shield, ArrowRight, Zap, Flame } from 'lucide-react';
 import { PRICING_PLANS } from '../data/mockData';
 import { ScrollReveal } from '../../components/ScrollReveal';
+import { OfferBadges } from '../../components/OfferBadges';
+import { OFFER, brl, MENSAL_OFF, VITALICIO_OFF } from '../../data/offer';
 
 interface PricingSectionProps {
   onSelectPlan: (planId: string) => void;
@@ -54,18 +56,28 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
                 </span>
               </div>
 
-              <p className="text-xs text-[#98949E] mb-6">
+              <p className="text-xs text-[#98949E] mb-5">
                 Renovação mensal com liberdade para cancelar a qualquer momento.
               </p>
 
-              {/* Price */}
-              <div className="flex items-baseline gap-1.5 pb-6 border-b border-[#0E081B]">
-                <span className="text-3xl sm:text-4xl font-extrabold text-[#F4F2F7] font-display">
-                  R$ 169,90
-                </span>
-                <span className="text-xs text-[#817D8A]">
-                  / mês
-                </span>
+              <OfferBadges className="mb-5" />
+
+              {/* Price, anchored against the pre-campaign value */}
+              <div className="pb-6 border-b border-[#0E081B]">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-[#8A6070] line-through decoration-[#C0392B] decoration-2">
+                    {brl(OFFER.mensal.anchor)}
+                  </span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#2E0A10] border border-[#7F1D2B] text-[#FF6B6B]">
+                    -{MENSAL_OFF}%
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-[#F4F2F7] font-display">
+                    {brl(OFFER.mensal.price)}
+                  </span>
+                  <span className="text-xs text-[#817D8A]">{OFFER.mensal.period}</span>
+                </div>
               </div>
 
               {/* Features List */}
@@ -105,7 +117,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white text-[11px] font-extrabold uppercase tracking-wide shadow-[0_0_20px_#B65AF0]">
                 <Flame className="w-3.5 h-3.5 fill-white text-white" />
-                RESTAM APENAS {remainingSlots} ACESSOS NESTE LOTE
+                RESTAM APENAS {remainingSlots} VITALÍCIOS
               </span>
             </div>
 
@@ -126,19 +138,29 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
                 </div>
               </div>
 
-              <p className="text-xs text-[#98949E] mb-6">
+              <p className="text-xs text-[#98949E] mb-5">
                 Tenha a HypeLeads para sempre sem nunca mais pagar nenhuma mensalidade ou renovação.
               </p>
+
+              <OfferBadges className="mb-5" />
 
               {/* Pricing Box & Installments Selector */}
               <div className="p-4 rounded-2xl bg-[#090511] border border-[#1B0E2B] mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pb-3 border-b border-[#120921]">
                   <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-semibold text-[#8A6070] line-through decoration-[#C0392B] decoration-2">
+                        {brl(OFFER.vitalicio.anchor)}
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[#2E0A10] border border-[#7F1D2B] text-[#FF6B6B]">
+                        -{VITALICIO_OFF}%
+                      </span>
+                    </div>
                     <span className="text-3xl sm:text-4xl font-black text-[#F4F2F7] font-display">
-                      R$ 249,90
+                      {brl(OFFER.vitalicio.price)}
                     </span>
-                    <span className="text-xs text-[#B65AF0] font-bold ml-1.5">
-                      à vista no Pix
+                    <span className="block sm:inline sm:ml-1.5 mt-0.5 sm:mt-0 text-xs text-[#B65AF0] font-bold whitespace-nowrap">
+                      {OFFER.vitalicio.period}
                     </span>
                   </div>
                   <div className="text-xs text-[#817D8A]">
@@ -148,12 +170,14 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
 
                 {/* Installment Options in Pill Tabs */}
                 <div className="pt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 rounded-xl bg-[#0c0718] border border-[#1C0E30] text-[#F4F2F7] text-center font-medium">
-                    12x de <strong className="text-white">R$ 26,63</strong>
-                  </div>
-                  <div className="p-2 rounded-xl bg-[#0c0718] border border-[#1C0E30] text-[#F4F2F7] text-center font-medium">
-                    6x de <strong className="text-white">R$ 47,91</strong>
-                  </div>
+                  {OFFER.vitalicio.installments.map((i) => (
+                    <div
+                      key={i.count}
+                      className="p-2 rounded-xl bg-[#0c0718] border border-[#1C0E30] text-[#F4F2F7] text-center font-medium"
+                    >
+                      {i.count}x de <strong className="text-white">{brl(i.value)}</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
 

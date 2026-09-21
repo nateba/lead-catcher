@@ -1,7 +1,9 @@
 import React from 'react';
-import { Zap, Lock, LogOut, Check } from 'lucide-react';
+import { Zap, Lock, LogOut, Check, Flame } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CHECKOUT_URLS } from '../../constants';
+import { OfferBadges } from '../OfferBadges';
+import { OFFER, brl, MENSAL_OFF, VITALICIO_OFF } from '../../data/offer';
 
 export const PaywallScreen: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -22,23 +24,55 @@ export const PaywallScreen: React.FC = () => {
           confirmado. Assine para liberar o acesso ao HypeLeads.
         </p>
 
-        <div className="mt-6 space-y-2.5 text-left">
+        <OfferBadges size="compact" className="mt-5" />
+
+        <div className="mt-4 space-y-2.5 text-left">
           <a
             href={CHECKOUT_URLS.vitalicio}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-bold shadow-md shadow-indigo-500/25 transition-all"
+            className="relative block w-full px-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-md shadow-indigo-500/25 transition-all"
           >
-            <span className="flex items-center gap-2">
-              <Zap className="w-4 h-4" />
-              Acesso Pra Sempre
+            {/* Left-aligned: the prices are right-aligned, and the badge crowded
+                the struck-through anchor when it sat on that side. */}
+            <span className="absolute -top-2.5 left-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2E0A10] border border-[#7F1D2B] text-[10px] font-extrabold uppercase tracking-wide text-[#FF6B6B]">
+              <Flame className="w-2.5 h-2.5 fill-[#FF6B6B]" />
+              Restam {OFFER.lifetimeSlotsLeft} vitalícios
             </span>
-            <span>R$ 249,90</span>
+            <span className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 text-sm font-bold">
+                <Zap className="w-4 h-4" />
+                Acesso Pra Sempre
+              </span>
+              <span className="text-right leading-tight">
+                <span className="block text-[11px] font-semibold text-white/55 line-through">
+                  {brl(OFFER.vitalicio.anchor)}
+                </span>
+                <span className="block text-sm font-extrabold">{brl(OFFER.vitalicio.price)}</span>
+              </span>
+            </span>
+            <span className="mt-1 block text-[11px] font-medium text-white/70">
+              {OFFER.vitalicio.period} · {VITALICIO_OFF}% de desconto
+            </span>
           </a>
+
           <a
             href={CHECKOUT_URLS.mensal}
-            className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm font-bold transition-all"
+            className="block w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all"
           >
-            <span>Plano Mensal</span>
-            <span>R$ 169,90</span>
+            <span className="flex items-center justify-between gap-2">
+              <span className="text-sm font-bold">Plano Mensal</span>
+              <span className="text-right leading-tight">
+                <span className="block text-[11px] font-semibold text-slate-500 line-through">
+                  {brl(OFFER.mensal.anchor)}
+                </span>
+                <span className="block text-sm font-extrabold">
+                  {brl(OFFER.mensal.price)}
+                  <span className="text-[11px] font-medium text-slate-400"> {OFFER.mensal.period}</span>
+                </span>
+              </span>
+            </span>
+            <span className="mt-1 block text-[11px] font-medium text-slate-400">
+              {MENSAL_OFF}% de desconto
+            </span>
           </a>
         </div>
 
