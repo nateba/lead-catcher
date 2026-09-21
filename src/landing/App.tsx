@@ -72,7 +72,7 @@ export default function App() {
         <ValuePropositionSection onStartClick={() => handleOpenCheckout('vitalicio')} />
 
         {/* 6. Planos / Pricing com Destaque Vitalício */}
-        <PricingSection onSelectPlan={handleOpenCheckout} remainingSlots={3} />
+        <PricingSection onSelectPlan={handleOpenCheckout} />
 
         {/* 7. FAQ */}
         <FaqSection />

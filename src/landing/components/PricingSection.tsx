@@ -12,7 +12,7 @@ interface PricingSectionProps {
 
 export const PricingSection: React.FC<PricingSectionProps> = ({ 
   onSelectPlan, 
-  remainingSlots = 3 
+  remainingSlots = OFFER.lifetimeSlotsLeft,
 }) => {
   const [selectedInstallment, setSelectedInstallment] = useState<'pix' | '12x' | '6x'>('pix');
 
@@ -113,7 +113,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({
           <ScrollReveal direction="up" delay={350} duration={800} className="lg:col-span-7">
           <div className="h-full relative rounded-2xl md:rounded-3xl bg-gradient-to-b from-[#0b0716] via-[#07040E] to-[#050307] border-2 border-[#8126C2]/60 p-8 sm:p-10 flex flex-col justify-between shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(194,38,85,0.25)]">
             
-            {/* Top Badge (🔥 RESTAM APENAS X ACESSOS NESTE LOTE) */}
+            {/* Scarcity badge — count comes from the shared offer. */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-auto whitespace-nowrap">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#8126C2] to-[#9436D9] text-white text-[11px] font-extrabold uppercase tracking-wide shadow-[0_0_20px_#B65AF0]">
                 <Flame className="w-3.5 h-3.5 fill-white text-white" />

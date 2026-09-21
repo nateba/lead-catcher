@@ -84,7 +84,6 @@ export const PRICING_PLANS: PricingPlan[] = [
     period: 'à vista no Pix',
     description: 'Pagamento único. Acesso vitalício para prospectar e criar sites sem mensalidades.',
     featured: true,
-    badge: '🔥 RESTAM APENAS 3 ACESSOS NESTE LOTE',
     installments: [
       'ou 12x de R$ 26,63',
       'ou 6x de R$ 47,91',
