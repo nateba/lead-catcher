@@ -159,10 +159,6 @@ export const DemoDashboardView: React.FC = () => {
           );
         })}
       </ScrollReveal>
-
-      <p className="text-[13px] text-slate-500 text-center">
-        Números de exemplo, configurados na aba Presente. Seus dados reais estão em Métricas.
-      </p>
     </div>
   );
 };
