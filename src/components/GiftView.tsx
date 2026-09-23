@@ -16,7 +16,7 @@ import {
   Info,
   Lock,
 } from 'lucide-react';
-import { DEMO_PERIODS } from '../data/giftCourse';
+import { DEMO_DEFAULT_TICKET, DEMO_PERIODS } from '../data/giftCourse';
 import { SalesNotificationStack, type SaleNotification } from './SalesNotificationStack';
 import { useToast } from './Toast';
 
@@ -25,6 +25,8 @@ const STORAGE_KEY = 'hypeleads_demo_panel_v1';
 interface DemoConfig {
   manual: Record<string, string>;
   sales: SaleNotification[];
+  /** Ticket médio; a quantidade de vendas da dashboard é derivada dele. */
+  ticket?: string;
 }
 
 const emptySale = (): SaleNotification => ({
@@ -65,7 +67,7 @@ export const GiftView: React.FC<GiftViewProps> = ({ giftUnlocksAt = null, previe
   const { showToast } = useToast();
   const daysLeft = daysUntilUnlock(giftUnlocksAt);
   const isLocked = !previewUnlocked && daysLeft > 0;
-  const [config, setConfig] = useState<DemoConfig>({ manual: {}, sales: [emptySale()] });
+  const [config, setConfig] = useState<DemoConfig>({ manual: {}, sales: [emptySale()], ticket: '' });
   const [queue, setQueue] = useState<SaleNotification[]>([]);
 
   // Demo settings are per-device preview state, so localStorage is enough.
@@ -91,6 +93,15 @@ export const GiftView: React.FC<GiftViewProps> = ({ giftUnlocksAt = null, previe
     const manual = Number(config.manual[key]);
     return Number.isFinite(manual) && manual > 0 ? manual : auto;
   };
+
+  const ticket = (() => {
+    const typed = Number(config.ticket);
+    return Number.isFinite(typed) && typed > 0 ? typed : DEMO_DEFAULT_TICKET;
+  })();
+
+  /** Same maths the dashboard runs, so the preview cannot disagree with it. */
+  const salesFor = (key: string, auto: number) =>
+    Math.max(1, Math.round(valueFor(key, auto) / ticket));
 
   const totals = useMemo(() => {
     const count = config.sales.length;
@@ -204,6 +215,9 @@ export const GiftView: React.FC<GiftViewProps> = ({ giftUnlocksAt = null, previe
                     <p className="text-lg font-extrabold text-white mt-1">
                       {brl(valueFor(period.key, period.auto))}
                     </p>
+                    <p className="text-[12px] text-slate-400 mt-0.5">
+                      {salesFor(period.key, period.auto)} vendas
+                    </p>
                     <p className={`text-[12px] font-bold mt-0.5 ${isManual ? 'text-[#B65AF0]' : 'text-emerald-400'}`}>
                       {isManual ? 'Manual' : 'Automático'}
                     </p>
@@ -221,6 +235,27 @@ export const GiftView: React.FC<GiftViewProps> = ({ giftUnlocksAt = null, previe
             <p className="text-[13px] text-slate-400 mb-3.5">
               Preencha só o período que quiser travar. Campo vazio usa o automático.
             </p>
+
+            <div className="mb-4">
+              <label
+                htmlFor="demo-ticket"
+                className="block text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1.5"
+              >
+                Ticket médio (R$)
+              </label>
+              <input
+                id="demo-ticket"
+                type="number"
+                value={config.ticket || ''}
+                onChange={(e) => setConfig((prev) => ({ ...prev, ticket: e.target.value }))}
+                placeholder={String(DEMO_DEFAULT_TICKET)}
+                className="w-full px-3 py-2 text-xs bg-slate-800/60 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+              />
+              <p className="text-[12px] text-slate-500 mt-1.5">
+                A quantidade de vendas de cada período é calculada a partir dele: faturamento ÷
+                ticket. Vazio usa {brl(DEMO_DEFAULT_TICKET)}.
+              </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               {DEMO_PERIODS.map((period) => (

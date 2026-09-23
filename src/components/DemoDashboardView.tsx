@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LayoutDashboard, DollarSign, TrendingUp, ShoppingBag, Layers, CheckCircle2, Activity } from 'lucide-react';
-import { DEMO_PERIODS, DEMO_PAYMENT_METHODS } from '../data/giftCourse';
+import { DEMO_DEFAULT_TICKET, DEMO_PERIODS, DEMO_PAYMENT_METHODS } from '../data/giftCourse';
 import { ScrollReveal } from './ScrollReveal';
 
 const STORAGE_KEY = 'hypeleads_demo_panel_v1';
@@ -10,6 +10,7 @@ const brl = (v: number) =>
 
 export const DemoDashboardView: React.FC = () => {
   const [manual, setManual] = useState<Record<string, string>>({});
+  const [ticketInput, setTicketInput] = useState('');
   const [period, setPeriod] = useState(DEMO_PERIODS[0].key);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ export const DemoDashboardView: React.FC = () => {
       if (raw) {
         const parsed = JSON.parse(raw);
         setManual(parsed.manual || {});
+        setTicketInput(parsed.ticket || '');
       }
     } catch {
       /* falls back to the reference figures */
@@ -29,13 +31,13 @@ export const DemoDashboardView: React.FC = () => {
   const isManual = Number.isFinite(manualValue) && manualValue > 0;
   const revenue = isManual ? manualValue : active.auto;
 
-  // Sales follow the period, and follow a manual revenue proportionally — a
-  // hand-typed R$ 500k next to the daily sale count would read as nonsense.
-  const sales = isManual
-    ? Math.max(1, Math.round((manualValue / active.auto) * active.sales))
-    : active.sales;
-
-  const unitPrice = sales > 0 ? revenue / sales : 0;
+  // The ticket is what gets configured; the quantity follows from it. Deriving
+  // it this way keeps revenue, sales and unit price consistent at every period,
+  // which is the first thing that gives a made-up dashboard away.
+  const typedTicket = Number(ticketInput);
+  const ticket = Number.isFinite(typedTicket) && typedTicket > 0 ? typedTicket : DEMO_DEFAULT_TICKET;
+  const sales = Math.max(1, Math.round(revenue / ticket));
+  const unitPrice = revenue / sales;
 
   return (
     <div id="demo-dashboard-container" className="max-w-6xl mx-auto space-y-5">
