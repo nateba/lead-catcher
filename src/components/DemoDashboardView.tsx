@@ -10,7 +10,6 @@ const brl = (v: number) =>
 
 export const DemoDashboardView: React.FC = () => {
   const [manual, setManual] = useState<Record<string, string>>({});
-  const [salesCount, setSalesCount] = useState(0);
   const [period, setPeriod] = useState(DEMO_PERIODS[0].key);
 
   useEffect(() => {
@@ -19,7 +18,6 @@ export const DemoDashboardView: React.FC = () => {
       if (raw) {
         const parsed = JSON.parse(raw);
         setManual(parsed.manual || {});
-        setSalesCount((parsed.sales || []).length);
       }
     } catch {
       /* falls back to the reference figures */
@@ -28,7 +26,16 @@ export const DemoDashboardView: React.FC = () => {
 
   const active = DEMO_PERIODS.find((p) => p.key === period) || DEMO_PERIODS[0];
   const manualValue = Number(manual[active.key]);
-  const revenue = Number.isFinite(manualValue) && manualValue > 0 ? manualValue : active.auto;
+  const isManual = Number.isFinite(manualValue) && manualValue > 0;
+  const revenue = isManual ? manualValue : active.auto;
+
+  // Sales follow the period, and follow a manual revenue proportionally — a
+  // hand-typed R$ 500k next to the daily sale count would read as nonsense.
+  const sales = isManual
+    ? Math.max(1, Math.round((manualValue / active.auto) * active.sales))
+    : active.sales;
+
+  const unitPrice = sales > 0 ? revenue / sales : 0;
 
   return (
     <div id="demo-dashboard-container" className="max-w-6xl mx-auto space-y-5">
@@ -98,7 +105,7 @@ export const DemoDashboardView: React.FC = () => {
             <p className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-500">
               <ShoppingBag className="w-3 h-3" /> Total de vendas
             </p>
-            <p className="text-2xl font-extrabold text-white mt-1.5">{salesCount}</p>
+            <p className="text-2xl font-extrabold text-white mt-1.5">{sales}</p>
             <div className="mt-3 flex items-end gap-1 h-8">
               {[40, 55, 48, 70, 62, 85, 95].map((h, i) => (
                 <div key={i} className="flex-1 rounded-sm bg-[#8126C2]/70" style={{ height: `${h}%` }} />
@@ -132,10 +139,11 @@ export const DemoDashboardView: React.FC = () => {
       {/* Bottom stats */}
       <ScrollReveal direction="up" delay={360} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: Layers, value: '63', label: 'Estruturas' },
-          { icon: CheckCircle2, value: '63', label: 'Finalizadas' },
-          { icon: Activity, value: '0', label: 'Em andamento' },
-          { icon: DollarSign, value: brl(0), label: 'Preço unitário' },
+          // Derived from the period too: a fixed 63 next to 362 sales reads as broken.
+          { icon: Layers, value: String(sales + 2), label: 'Estruturas' },
+          { icon: CheckCircle2, value: String(sales), label: 'Finalizadas' },
+          { icon: Activity, value: '2', label: 'Em andamento' },
+          { icon: DollarSign, value: brl(unitPrice), label: 'Preço unitário' },
         ].map((stat) => {
           const Icon = stat.icon;
           return (

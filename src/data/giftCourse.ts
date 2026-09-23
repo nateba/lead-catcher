@@ -37,20 +37,22 @@ export const HOW_TO_USE = [
 export interface DemoPeriod {
   key: 'diario' | 'sete' | 'trinta' | 'noventa';
   label: string;
+  /** Faturamento do período. */
   auto: number;
+  /** Vendas do período. auto / sales fica sempre perto de R$ 400 de ticket. */
+  sales: number;
 }
 
 // Reference figures used by the mockup when no manual value is set.
 export const DEMO_PERIODS: DemoPeriod[] = [
-  { key: 'diario', label: 'Diário', auto: 1975 },
-  { key: 'sete', label: '7 dias', auto: 12536 },
-  { key: 'trinta', label: '30 dias', auto: 48286 },
-  { key: 'noventa', label: '90 dias', auto: 144495 },
+  { key: 'diario', label: 'Diário', auto: 1975, sales: 5 },
+  { key: 'sete', label: '7 dias', auto: 12536, sales: 32 },
+  { key: 'trinta', label: '30 dias', auto: 48286, sales: 121 },
+  { key: 'noventa', label: '90 dias', auto: 144495, sales: 362 },
 ];
 
 export const DEMO_PAYMENT_METHODS = [
-  { name: 'Pix', share: 62 },
-  { name: 'Cartão de crédito', share: 28 },
-  { name: 'Boleto', share: 7 },
-  { name: 'Pic Pay', share: 3 },
+  { name: 'Cartão de crédito', share: 58 },
+  { name: 'Pix', share: 36 },
+  { name: 'Pic Pay', share: 6 },
 ];
